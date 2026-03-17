@@ -215,13 +215,18 @@ export default function DreamPage() {
         )}
       </div>
 
-      {/* 꿈해몽 하단 상품 추천 */}
-      <ProductAdBanner
-        context={{ type: 'horoscope' }}
-        icon="💭"
-        title="꿈이 알려준 메시지를 행동으로"
-        desc="꿈에서 받은 행운의 기운을 실제 생활로 가져오세요"
-      />
+      {/* 꿈해몽 결과가 있을 때 상품 추천 */}
+      {(query.trim() || category) && results.length > 0 && (
+        <ProductAdBanner
+          context={{
+            type: 'lucky',
+            luckyColor: results[0]?.category === '자연' ? '초록' : results[0]?.category === '동물' ? '금색' : undefined,
+          }}
+          icon="💭"
+          title="꿈이 알려준 행운 아이템"
+          desc="꿈에서 받은 행운의 기운을 실제 생활로 가져오세요"
+        />
+      )}
     </div>
   );
 }
