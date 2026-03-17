@@ -177,6 +177,99 @@ export function getThreeCardTarot(seed: number) {
   return cards;
 }
 
+/* ── 시간대별 운세 조언 ── */
+
+const TIME_FORTUNE: Record<string, { morning: string; afternoon: string; evening: string }> = {
+  high: {
+    morning: '오전에 에너지가 가장 높습니다. 중요한 결정이나 미팅은 오전에 잡으세요. 10시~12시 사이가 최적입니다.',
+    afternoon: '오후에는 창의적인 아이디어가 떠오르기 좋은 시간입니다. 새로운 프로젝트 기획이나 브레인스토밍을 해보세요.',
+    evening: '저녁에는 사교 활동에서 좋은 기운이 있습니다. 오래 보지 못한 지인에게 연락해보세요.',
+  },
+  mid: {
+    morning: '오전에는 차분하게 하루를 준비하세요. 명상이나 가벼운 스트레칭으로 시작하면 좋습니다.',
+    afternoon: '오후 2시~4시 사이가 집중력이 가장 높은 시간입니다. 업무 처리에 적합합니다.',
+    evening: '저녁에는 개인 시간을 충분히 가지세요. 자기 계발이나 취미 활동이 운을 높여줍니다.',
+  },
+  low: {
+    morning: '오전에는 무리하지 마세요. 중요한 약속은 가급적 오후로 미루는 것이 좋습니다.',
+    afternoon: '오후에는 기운이 서서히 올라옵니다. 가벼운 산책으로 에너지를 전환해보세요.',
+    evening: '저녁에는 일찍 귀가하여 충분한 휴식을 취하세요. 내일을 위한 충전이 필요합니다.',
+  },
+};
+
+export function getTimeFortune(overallScore: number): { morning: string; afternoon: string; evening: string } {
+  if (overallScore >= 4) return TIME_FORTUNE.high;
+  if (overallScore >= 3) return TIME_FORTUNE.mid;
+  return TIME_FORTUNE.low;
+}
+
+/* ── 별자리 궁합 ── */
+
+const ZODIAC_COMPAT: Record<string, { best: string[]; good: string[]; caution: string[] }> = {
+  aries: { best: ['leo', 'sagittarius'], good: ['gemini', 'aquarius'], caution: ['cancer', 'capricorn'] },
+  taurus: { best: ['virgo', 'capricorn'], good: ['cancer', 'pisces'], caution: ['leo', 'aquarius'] },
+  gemini: { best: ['libra', 'aquarius'], good: ['aries', 'leo'], caution: ['virgo', 'pisces'] },
+  cancer: { best: ['scorpio', 'pisces'], good: ['taurus', 'virgo'], caution: ['aries', 'libra'] },
+  leo: { best: ['aries', 'sagittarius'], good: ['gemini', 'libra'], caution: ['taurus', 'scorpio'] },
+  virgo: { best: ['taurus', 'capricorn'], good: ['cancer', 'scorpio'], caution: ['gemini', 'sagittarius'] },
+  libra: { best: ['gemini', 'aquarius'], good: ['leo', 'sagittarius'], caution: ['cancer', 'capricorn'] },
+  scorpio: { best: ['cancer', 'pisces'], good: ['virgo', 'capricorn'], caution: ['leo', 'aquarius'] },
+  sagittarius: { best: ['aries', 'leo'], good: ['libra', 'aquarius'], caution: ['virgo', 'pisces'] },
+  capricorn: { best: ['taurus', 'virgo'], good: ['scorpio', 'pisces'], caution: ['aries', 'libra'] },
+  aquarius: { best: ['gemini', 'libra'], good: ['aries', 'sagittarius'], caution: ['taurus', 'scorpio'] },
+  pisces: { best: ['cancer', 'scorpio'], good: ['taurus', 'capricorn'], caution: ['gemini', 'sagittarius'] },
+};
+
+export function getZodiacCompat(slug: string) {
+  return ZODIAC_COMPAT[slug] ?? ZODIAC_COMPAT.aries;
+}
+
+/* ── 3카드 스프레드 종합 해석 ── */
+
+const SPREAD_INTERPRETATIONS = [
+  (past: string, present: string, future: string) =>
+    `과거의 '${past}' 에너지가 현재의 '${present}'으로 이어지고 있습니다. 이 흐름이 미래의 '${future}'로 발전할 것입니다. 과거의 경험을 교훈 삼아 현재에 집중하면 밝은 미래를 만들 수 있습니다.`,
+  (past: string, present: string, future: string) =>
+    `'${past}'의 영향 아래 지나온 시간들이 현재 '${present}'의 기반이 되었습니다. 앞으로 '${future}'의 에너지가 펼쳐집니다. 변화를 두려워하지 말고 자연스러운 흐름에 맡겨보세요.`,
+  (past: string, present: string, future: string) =>
+    `과거에는 '${past}'의 시기를 거쳤고, 지금은 '${present}'의 한가운데에 있습니다. 미래에는 '${future}'이(가) 기다리고 있으니, 현재의 선택이 미래를 결정짓는 열쇠가 됩니다.`,
+];
+
+export function getSpreadInterpretation(cards: { card: { nameKo: string }; isReversed: boolean }[], seed: number): string {
+  const idx = seed % SPREAD_INTERPRETATIONS.length;
+  const names = cards.map(c => c.card.nameKo + (c.isReversed ? '(역)' : ''));
+  return SPREAD_INTERPRETATIONS[idx](names[0], names[1], names[2]);
+}
+
+/* ── 오늘의 행동 가이드 (운세용) ── */
+
+const ACTION_GUIDES: Record<string, string[]> = {
+  love: [
+    '커플: 사소한 선물이 큰 감동을 줄 수 있는 날입니다.',
+    '솔로: 새로운 모임이나 소셜 활동에 참여하면 좋은 인연을 만날 수 있습니다.',
+    '가족: 가족과의 대화 시간을 가지면 관계가 더욱 깊어집니다.',
+  ],
+  money: [
+    '충동구매를 자제하고, 꼭 필요한 지출만 하세요.',
+    '새로운 재테크 정보를 찾아보기 좋은 날입니다.',
+    '지인과의 금전 거래는 피하는 것이 좋습니다.',
+  ],
+  health: [
+    '물을 평소보다 2잔 더 마시세요. 수분 보충이 중요한 날입니다.',
+    '30분 이상의 유산소 운동이 컨디션 회복에 도움됩니다.',
+    '과로를 피하고 충분한 수면을 취하세요.',
+  ],
+};
+
+export function getActionGuide(seed: number): { love: string; money: string; health: string } {
+  const rng = seededRandom(seed * 41);
+  return {
+    love: ACTION_GUIDES.love[Math.floor(rng() * ACTION_GUIDES.love.length)],
+    money: ACTION_GUIDES.money[Math.floor(rng() * ACTION_GUIDES.money.length)],
+    health: ACTION_GUIDES.health[Math.floor(rng() * ACTION_GUIDES.health.length)],
+  };
+}
+
 /* ── 생시 상수 ── */
 
 export const BIRTH_TIMES = [
