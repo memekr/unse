@@ -66,7 +66,6 @@ export const siteConfig: SiteConfig = {
   themeColor: '#0d0a1a',
   navigation: [
     { href: '/', label: '홈' },
-    { href: '/my', label: '나의운세' },
     { href: '/horoscope', label: '오늘의운세' },
     { href: '/saju', label: '사주풀이' },
     { href: '/tarot', label: '타로카드' },
