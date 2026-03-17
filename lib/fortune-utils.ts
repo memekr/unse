@@ -23,7 +23,9 @@ export function getZodiacSign(month: number, day: number) {
     const [m, d, prev] = ranges[i];
     if (month === m && day < d) return ZODIAC_SIGNS[prev];
   }
-  const monthIdx = [0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+  // 각 월의 경계일 이후 → 해당 월에 시작하는 별자리
+  // 1월≥20 물병(10), 2월≥19 물고기(11), 3월≥21 양(0), 4월≥20 황소(1), ...
+  const monthIdx = [0, 10, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
   return ZODIAC_SIGNS[monthIdx[month] ?? 9];
 }
 

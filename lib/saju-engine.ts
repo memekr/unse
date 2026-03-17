@@ -87,19 +87,16 @@ function getYearPillar(year: number, month: number, day: number): Pillar {
 const MONTH_START_DAYS = [6, 4, 6, 5, 6, 6, 7, 7, 8, 8, 7, 7]; // 1월~12월
 
 function getMonthPillar(year: number, month: number, day: number, yearStem: number): Pillar {
-  // 음력 월 계산 (절기 기준)
-  let lunarMonth: number;
   const startDay = MONTH_START_DAYS[month - 1];
 
-  if (day >= startDay) {
-    lunarMonth = month; // 절기 후
-  } else {
-    lunarMonth = month - 1; // 절기 전이면 전월
-    if (lunarMonth === 0) lunarMonth = 12;
-  }
+  // 절기 이전이면 전월 기준
+  let solarMonth = day >= startDay ? month : month - 1;
+  if (solarMonth === 0) solarMonth = 12;
 
-  // 월주 지지: 인월(1월)=2, 묘월(2월)=3, ...
-  // 음력 1월=인(寅)=2, 2월=묘(卯)=3, ...
+  // 양력월 → 절기월: 2월=인월(1), 3월=묘월(2), ..., 1월=축월(12)
+  const lunarMonth = ((solarMonth - 2 + 12) % 12) + 1;
+
+  // 월주 지지: 인월(1)=寅(2), 묘월(2)=卯(3), ..., 축월(12)=丑(1)
   const monthBranch = (lunarMonth + 1) % 12;
 
   // 월주 천간: 연간 기준 오호장건법
