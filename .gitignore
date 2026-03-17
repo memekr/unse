@@ -26,6 +26,9 @@ yarn-error.log*
 .env*.local
 .env
 
+# private modules (광고 구현)
+/_private/
+
 # vercel
 .vercel
 

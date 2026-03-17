@@ -99,7 +99,9 @@ export const metadata: Metadata = {
     creator: '@unse_me',
   },
   verification: {
-    google: 'liBtkjI3Gz7Qi-1gousJ4kFRK5DHyQ4VKMvYTQwww3I',
+    ...(process.env.NEXT_PUBLIC_GOOGLE_VERIFICATION
+      ? { google: process.env.NEXT_PUBLIC_GOOGLE_VERIFICATION }
+      : {}),
     other: {
       ...(siteConfig.naverVerification
         ? { 'naver-site-verification': siteConfig.naverVerification }

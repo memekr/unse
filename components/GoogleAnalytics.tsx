@@ -1,31 +1,11 @@
 'use client';
 
-import Script from 'next/script';
-import { siteConfig } from '@/lib/site-config';
+/**
+ * Google Analytics (스텁)
+ *
+ * GA4 추적을 사용하려면 _private/analytics/ 모듈을 설정하세요.
+ */
 
 export default function GoogleAnalytics() {
-  const gaId = siteConfig.gaId;
-
-  return (
-    <>
-      {gaId && (
-        <>
-          <Script
-            src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
-            strategy="afterInteractive"
-          />
-          <Script id="ga4-init" strategy="afterInteractive">
-            {`
-              window.dataLayer = window.dataLayer || [];
-              function gtag(){dataLayer.push(arguments);}
-              gtag('js', new Date());
-              gtag('config', '${gaId}', {
-                page_path: window.location.pathname,
-              });
-            `}
-          </Script>
-        </>
-      )}
-    </>
-  );
+  return null;
 }
