@@ -4,35 +4,53 @@ import { useState } from 'react';
 import type { FormEvent } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/components/AuthContext';
-import { calculateSaju, FIVE_ELEMENTS_KO, FIVE_ELEMENTS_NAME, FIVE_ELEMENTS_COLOR } from '@/lib/saju-engine';
+import { calculateSaju, FIVE_ELEMENTS_NAME, FIVE_ELEMENTS_COLOR } from '@/lib/saju-engine';
 import type { SajuResult } from '@/lib/saju-engine';
-import { ZODIAC_SIGNS, getDailySeed, seededRandom } from '@/lib/fortune-data';
+import { ZODIAC_SIGNS, getDailySeed } from '@/lib/fortune-data';
 import {
   getZodiacSign, getZodiacFortune, hashName, getDailyTarot,
-  getLuckyNumbers, BIRTH_TIMES,
+  getLuckyNumbers, BIRTH_TIMES, getHoroscopeSummary, getSajuSummary,
+  getTarotSummary, getOverallScore, getElementAdvice,
+  getChineseZodiac, getZodiacPersonality, getThreeCardTarot,
 } from '@/lib/fortune-utils';
 
 function stars(n: number) {
   return '\u2B50'.repeat(n) + '\u2606'.repeat(5 - n);
 }
 
+function scoreBar(score: number, color: string) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%' }}>
+      <div style={{ flex: 1, height: '6px', background: 'rgba(255,255,255,0.06)', borderRadius: '3px', overflow: 'hidden' }}>
+        <div style={{ width: `${score * 20}%`, height: '100%', background: color, borderRadius: '3px', transition: 'width 0.5s' }} />
+      </div>
+      <span style={{ fontSize: '0.75rem', fontWeight: 700, color, minWidth: '2.5rem', textAlign: 'right' }}>{score * 20}점</span>
+    </div>
+  );
+}
+
 /* ── 타입 ── */
 
 type FullResult = {
   name: string;
+  birthYear: number;
   zodiac: typeof ZODIAC_SIGNS[number];
   zodiacIndex: number;
   fortune: ReturnType<typeof getZodiacFortune>;
   saju: SajuResult;
   tarot: ReturnType<typeof getDailyTarot>;
+  threeCards: ReturnType<typeof getThreeCardTarot>;
   luckyNumbers: number[];
   birthTime: number;
+  chineseZodiac: { name: string; emoji: string };
 };
+
+type ViewMode = 'input' | 'select' | 'horoscope' | 'saju' | 'tarot' | 'lucky';
 
 /* ── 메인 컴포넌트 ── */
 
 export default function HomePage() {
-  const { user, signInWithGoogle, isConfigured } = useAuth();
+  const { user, signInWithGoogle, signOutUser, isConfigured } = useAuth();
 
   const [name, setName] = useState('');
   const [birthDate, setBirthDate] = useState('');
@@ -40,6 +58,7 @@ export default function HomePage() {
   const [birthTime, setBirthTime] = useState(-1);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<FullResult | null>(null);
+  const [view, setView] = useState<ViewMode>('input');
 
   // 저장된 프로필
   const [saved] = useState<Array<{ name: string; birthDate: string; gender: string; birthTime: number }>>(() => {
@@ -63,14 +82,18 @@ export default function HomePage() {
       const fortune = getZodiacFortune(zodiacIndex);
       const saju = calculateSaju(y, m, day, birthTime, gender);
       const ns = hashName(name.trim());
-      const tarot = getDailyTarot(getDailySeed() + ns);
+      const seed = getDailySeed() + ns;
+      const tarot = getDailyTarot(seed);
+      const threeCards = getThreeCardTarot(seed);
+      const chineseZodiac = getChineseZodiac(y);
 
       setResult({
-        name: name.trim(), zodiac, zodiacIndex, fortune, saju, tarot,
-        luckyNumbers: getLuckyNumbers((getDailySeed() + ns) * 7),
-        birthTime,
+        name: name.trim(), birthYear: y, zodiac, zodiacIndex, fortune, saju, tarot, threeCards,
+        luckyNumbers: getLuckyNumbers(seed * 7),
+        birthTime, chineseZodiac,
       });
       setLoading(false);
+      setView('select');
 
       // 프로필 저장
       try {
@@ -78,14 +101,16 @@ export default function HomePage() {
         const list = [p, ...saved.filter(s => s.name !== p.name)].slice(0, 5);
         localStorage.setItem('unse_profiles', JSON.stringify(list));
       } catch { /* */ }
-    }, 1000);
+    }, 1200);
   }
 
   const today = new Date();
   const dateStr = `${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일`;
 
-  /* ── 입력 폼 (결과 없을 때) ── */
-  if (!result) {
+  /* ═══════════════════════════════
+     STEP 1: 정보 입력
+     ═══════════════════════════════ */
+  if (view === 'input' || !result) {
     return (
       <div className="home-page">
         <section className="hero-fortune">
@@ -100,11 +125,24 @@ export default function HomePage() {
           <p className="hero-desc">
             {'이름과 생년월일을 입력하면'}
             <br />
-            {'별자리 운세 · 사주풀이 · 타로카드 · 행운번호를 한번에!'}
+            {'별자리 운세 · 사주팔자 · 타로카드 · 행운번호를 분석합니다'}
           </p>
         </section>
 
-        <form className="saju-form" onSubmit={handleSubmit} style={{ marginTop: '2rem' }}>
+        {/* Google 로그인 상태 */}
+        {isConfigured && user && (
+          <div style={{ textAlign: 'center', margin: '1rem 0', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--color-glass)', border: '1px solid var(--color-glass-border)' }}>
+            <span style={{ fontSize: '0.875rem' }}>
+              {user.photoURL && <img src={user.photoURL} alt="" style={{ width: '1.25rem', height: '1.25rem', borderRadius: '50%', verticalAlign: 'middle', marginRight: '0.375rem' }} />}
+              {user.displayName ?? user.email}{' 님 환영합니다'}
+            </span>
+            <button onClick={signOutUser} style={{ marginLeft: '0.75rem', padding: '0.25rem 0.5rem', borderRadius: '0.375rem', border: '1px solid var(--color-glass-border)', background: 'transparent', color: 'var(--color-text-dim)', fontSize: '0.6875rem', cursor: 'pointer' }}>
+              {'로그아웃'}
+            </button>
+          </div>
+        )}
+
+        <form className="saju-form" onSubmit={handleSubmit} style={{ marginTop: '1.5rem' }}>
           {/* 최근 조회 */}
           {saved.length > 0 && (
             <div style={{ marginBottom: '1.25rem' }}>
@@ -162,15 +200,15 @@ export default function HomePage() {
             </div>
           </div>
 
-          <button type="submit" className="submit-btn" disabled={!name.trim() || !birthDate || !gender}>
-            {'\uD83D\uDD2E 나의 운세 확인하기'}
+          <button type="submit" className="submit-btn" disabled={!name.trim() || !birthDate || !gender || loading}>
+            {loading ? '\u23F3 분석 중...' : '\uD83D\uDD2E 나의 운세 분석하기'}
           </button>
 
           {/* 구글 로그인 옵션 */}
           {isConfigured && !user && (
             <div style={{ textAlign: 'center', marginTop: '1rem' }}>
               <p style={{ fontSize: '0.75rem', color: 'var(--color-text-dim)', marginBottom: '0.5rem' }}>
-                {'또는'}
+                {'결과를 저장하고 싶다면'}
               </p>
               <button type="button" onClick={signInWithGoogle} style={{
                 display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
@@ -184,11 +222,8 @@ export default function HomePage() {
                   <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
                   <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
                 </svg>
-                {'Google로 시작하기'}
+                {'Google로 로그인'}
               </button>
-              <p style={{ fontSize: '0.6875rem', color: 'var(--color-text-dim)', marginTop: '0.5rem' }}>
-                {'로그인하면 결과를 저장하고 다시 볼 수 있어요'}
-              </p>
             </div>
           )}
         </form>
@@ -225,299 +260,594 @@ export default function HomePage() {
       <div className="home-page">
         <div className="loading-spinner" style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <span className="spinner" />
-          <span>{result?.name ?? name}{'님의 운세를 분석하고 있습니다...'}</span>
+          <span>{name}{'님의 운세를 분석하고 있습니다...'}</span>
         </div>
       </div>
     );
   }
 
-  /* ══════════════════════════════
-     결과 화면 — 모든 운세 한번에
-     ══════════════════════════════ */
   const r = result;
+  const overallScore = getOverallScore(r.fortune);
+  const horoscopeSummary = getHoroscopeSummary(r.name, r.fortune.overall, getDailySeed());
+  const sajuSummary = getSajuSummary(r.saju.dominantElement);
+  const tarotSummary = getTarotSummary(r.tarot.card.nameKo, r.tarot.isReversed, r.tarot.card.uprightKeywords, r.tarot.card.reversedKeywords);
+  const elementAdvice = getElementAdvice(r.saju.dominantElement);
+  const zodiacPersonality = getZodiacPersonality(r.zodiac.slug);
 
-  return (
-    <div className="home-page">
-      {/* ── 프로필 헤더 ── */}
-      <section style={{
-        textAlign: 'center', padding: '2rem 1.5rem 1.5rem',
-        borderRadius: 'var(--radius-lg)', background: 'var(--gradient-card)',
-        border: '1px solid var(--color-glass-border)', marginBottom: '1.5rem',
-      }}>
-        <div style={{ fontSize: '3rem', marginBottom: '0.375rem' }}>{r.zodiac.icon}</div>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '0.25rem' }}>
-          {r.name}{'님의 오늘의 운세'}
-        </h1>
-        <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.75rem' }}>
-          {r.zodiac.name}{' \u00B7 '}{dateStr}
-        </p>
-        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-          <span style={{ padding: '0.25rem 0.75rem', borderRadius: '9999px', background: 'rgba(139,92,246,0.15)', color: 'var(--color-accent)', fontSize: '0.75rem', fontWeight: 600 }}>
-            {'\uD83C\uDFB2 '}{r.luckyNumbers.join(', ')}
-          </span>
-          <span style={{ padding: '0.25rem 0.75rem', borderRadius: '9999px', background: 'var(--color-gold-soft)', color: 'var(--color-gold)', fontSize: '0.75rem', fontWeight: 600 }}>
-            {'\uD83C\uDF08 '}{r.fortune.luckyColor}
-          </span>
-          <span style={{ padding: '0.25rem 0.75rem', borderRadius: '9999px', background: r.saju.yinYang === 'yang' ? 'rgba(239,68,68,0.15)' : 'rgba(59,130,246,0.15)', color: r.saju.yinYang === 'yang' ? '#f87171' : '#60a5fa', fontSize: '0.75rem', fontWeight: 600 }}>
-            {r.saju.yinYang === 'yang' ? '\u2600\uFE0F 양' : '\uD83C\uDF19 음'}{' \u00B7 '}{FIVE_ELEMENTS_NAME[r.saju.dominantElement]}
-          </span>
+  /* ═══════════════════════════════
+     STEP 2: 서비스 선택
+     ═══════════════════════════════ */
+  if (view === 'select') {
+    return (
+      <div className="home-page">
+        {/* 프로필 요약 */}
+        <section style={{
+          textAlign: 'center', padding: '2rem 1.5rem 1.5rem',
+          borderRadius: 'var(--radius-lg)', background: 'var(--gradient-card)',
+          border: '1px solid var(--color-glass-border)', marginBottom: '1.5rem',
+        }}>
+          <div style={{ fontSize: '3rem', marginBottom: '0.25rem' }}>{r.zodiac.icon}</div>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '0.25rem' }}>
+            {r.name}{'님'}
+          </h1>
+          <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.5rem' }}>
+            {r.zodiac.name}{' · '}{r.chineseZodiac.emoji}{' '}{r.chineseZodiac.name}{'띠 · '}{dateStr}
+          </p>
+
+          {/* 종합 점수 */}
+          <div style={{ margin: '1rem auto', maxWidth: '200px' }}>
+            <div style={{ position: 'relative', width: '120px', height: '120px', margin: '0 auto 0.5rem' }}>
+              <svg viewBox="0 0 120 120" style={{ transform: 'rotate(-90deg)' }}>
+                <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="10" />
+                <circle cx="60" cy="60" r="50" fill="none" stroke="var(--color-accent)" strokeWidth="10"
+                  strokeDasharray={`${overallScore * 3.14} ${314 - overallScore * 3.14}`}
+                  strokeLinecap="round" style={{ transition: 'stroke-dasharray 1s' }} />
+              </svg>
+              <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                <span style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--color-accent)' }}>{overallScore}</span>
+                <span style={{ fontSize: '0.625rem', color: 'var(--color-text-dim)' }}>{'종합운'}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* 한줄 요약 */}
+          <div style={{ padding: '0.75rem 1rem', borderRadius: 'var(--radius-sm)', background: 'var(--color-gold-soft)', marginTop: '0.75rem' }}>
+            <p style={{ fontSize: '0.9375rem', color: 'var(--color-gold)', fontWeight: 600, fontStyle: 'italic' }}>
+              {'\uD83D\uDCAB "'}{r.fortune.advice}{'"'}
+            </p>
+          </div>
+
+          {/* 태그들 */}
+          <div style={{ display: 'flex', gap: '0.375rem', justifyContent: 'center', flexWrap: 'wrap', marginTop: '0.75rem' }}>
+            <span style={{ padding: '0.1875rem 0.625rem', borderRadius: '9999px', background: 'rgba(139,92,246,0.15)', color: 'var(--color-accent)', fontSize: '0.6875rem', fontWeight: 600 }}>
+              {'\uD83C\uDFB2 '}{r.luckyNumbers.join(', ')}
+            </span>
+            <span style={{ padding: '0.1875rem 0.625rem', borderRadius: '9999px', background: 'var(--color-gold-soft)', color: 'var(--color-gold)', fontSize: '0.6875rem', fontWeight: 600 }}>
+              {'\uD83C\uDF08 '}{r.fortune.luckyColor}
+            </span>
+            <span style={{ padding: '0.1875rem 0.625rem', borderRadius: '9999px', background: r.saju.yinYang === 'yang' ? 'rgba(239,68,68,0.15)' : 'rgba(59,130,246,0.15)', color: r.saju.yinYang === 'yang' ? '#f87171' : '#60a5fa', fontSize: '0.6875rem', fontWeight: 600 }}>
+              {r.saju.yinYang === 'yang' ? '\u2600\uFE0F 양' : '\uD83C\uDF19 음'}{' · '}{FIVE_ELEMENTS_NAME[r.saju.dominantElement]}
+            </span>
+          </div>
+        </section>
+
+        {/* 서비스 선택 카드 */}
+        <h2 style={{ fontSize: '1.125rem', fontWeight: 700, textAlign: 'center', marginBottom: '1rem', color: 'var(--color-text-muted)' }}>
+          {'어떤 운세를 확인하시겠어요?'}
+        </h2>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1.5rem' }}>
+          {/* 별자리 운세 */}
+          <button onClick={() => setView('horoscope')} style={{
+            padding: '1.25rem 1rem', borderRadius: 'var(--radius-lg)',
+            background: 'var(--color-bg-card)', border: '1px solid var(--color-glass-border)',
+            cursor: 'pointer', textAlign: 'left', transition: 'border-color 0.2s, transform 0.2s',
+          }}>
+            <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>{r.zodiac.icon}</div>
+            <div style={{ fontSize: '0.9375rem', fontWeight: 700, color: 'var(--color-text)', marginBottom: '0.25rem' }}>{'별자리 운세'}</div>
+            <div style={{ fontSize: '0.6875rem', color: 'var(--color-text-dim)', marginBottom: '0.5rem' }}>
+              {r.zodiac.name}{' · '}{stars(r.fortune.overall)}
+            </div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--color-accent)', fontStyle: 'italic', lineHeight: 1.4 }}>
+              {horoscopeSummary}
+            </div>
+          </button>
+
+          {/* 사주팔자 */}
+          <button onClick={() => setView('saju')} style={{
+            padding: '1.25rem 1rem', borderRadius: 'var(--radius-lg)',
+            background: 'var(--color-bg-card)', border: '1px solid var(--color-glass-border)',
+            cursor: 'pointer', textAlign: 'left', transition: 'border-color 0.2s, transform 0.2s',
+          }}>
+            <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>{'\uD83C\uDFB4'}</div>
+            <div style={{ fontSize: '0.9375rem', fontWeight: 700, color: 'var(--color-text)', marginBottom: '0.25rem' }}>{'사주팔자'}</div>
+            <div style={{ fontSize: '0.6875rem', color: 'var(--color-text-dim)', marginBottom: '0.5rem' }}>
+              {r.saju.dayPillar.stemHanja}{r.saju.dayPillar.branchHanja}{'일주 · '}{FIVE_ELEMENTS_NAME[r.saju.dominantElement]}{'기운'}
+            </div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--color-accent)', fontStyle: 'italic', lineHeight: 1.4 }}>
+              {sajuSummary}
+            </div>
+          </button>
+
+          {/* 타로카드 */}
+          <button onClick={() => setView('tarot')} style={{
+            padding: '1.25rem 1rem', borderRadius: 'var(--radius-lg)',
+            background: 'var(--color-bg-card)', border: '1px solid var(--color-glass-border)',
+            cursor: 'pointer', textAlign: 'left', transition: 'border-color 0.2s, transform 0.2s',
+          }}>
+            <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>{r.tarot.card.emoji}</div>
+            <div style={{ fontSize: '0.9375rem', fontWeight: 700, color: 'var(--color-text)', marginBottom: '0.25rem' }}>{'타로카드'}</div>
+            <div style={{ fontSize: '0.6875rem', color: 'var(--color-text-dim)', marginBottom: '0.5rem' }}>
+              {r.tarot.card.nameKo}{' · '}{r.tarot.isReversed ? '역방향' : '정방향'}
+            </div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--color-accent)', fontStyle: 'italic', lineHeight: 1.4 }}>
+              {tarotSummary.length > 50 ? tarotSummary.slice(0, 47) + '...' : tarotSummary}
+            </div>
+          </button>
+
+          {/* 행운번호 */}
+          <button onClick={() => setView('lucky')} style={{
+            padding: '1.25rem 1rem', borderRadius: 'var(--radius-lg)',
+            background: 'var(--color-bg-card)', border: '1px solid var(--color-glass-border)',
+            cursor: 'pointer', textAlign: 'left', transition: 'border-color 0.2s, transform 0.2s',
+          }}>
+            <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>{'\uD83C\uDFB0'}</div>
+            <div style={{ fontSize: '0.9375rem', fontWeight: 700, color: 'var(--color-text)', marginBottom: '0.25rem' }}>{'행운의 번호'}</div>
+            <div style={{ fontSize: '0.6875rem', color: 'var(--color-text-dim)', marginBottom: '0.5rem' }}>
+              {'오늘의 럭키넘버 6개'}
+            </div>
+            <div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'wrap' }}>
+              {r.luckyNumbers.map((num, i) => (
+                <span key={i} style={{
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  width: '1.625rem', height: '1.625rem', borderRadius: '50%',
+                  background: 'var(--gradient-primary)', color: '#fff',
+                  fontWeight: 700, fontSize: '0.6875rem',
+                }}>
+                  {num}
+                </span>
+              ))}
+            </div>
+          </button>
         </div>
-        {/* 오늘의 조언 */}
-        <div style={{ marginTop: '1rem', padding: '0.75rem 1rem', borderRadius: 'var(--radius-sm)', background: 'var(--color-gold-soft)' }}>
-          <p style={{ fontSize: '0.875rem', color: 'var(--color-gold)', fontWeight: 600, fontStyle: 'italic' }}>
-            {'\uD83D\uDCAB "'}{r.fortune.advice}{'"'}
+
+        {/* 하단 링크 */}
+        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '1rem' }}>
+          <Link href="/dream" style={{
+            padding: '0.5rem 1rem', borderRadius: '9999px',
+            border: '1px solid var(--color-glass-border)', background: 'var(--color-glass)',
+            color: 'var(--color-text-muted)', fontSize: '0.8125rem', textDecoration: 'none',
+          }}>
+            {'\uD83D\uDCAD 꿈해몽'}
+          </Link>
+          <Link href="/horoscope" style={{
+            padding: '0.5rem 1rem', borderRadius: '9999px',
+            border: '1px solid var(--color-glass-border)', background: 'var(--color-glass)',
+            color: 'var(--color-text-muted)', fontSize: '0.8125rem', textDecoration: 'none',
+          }}>
+            {'\u2B50 12별자리 전체보기'}
+          </Link>
+        </div>
+
+        <button onClick={() => { setResult(null); setView('input'); }} className="submit-btn" style={{ background: 'transparent', border: '1px solid var(--color-glass-border)', color: 'var(--color-text-muted)' }}>
+          {'\uD83D\uDD04 다른 정보로 다시 보기'}
+        </button>
+      </div>
+    );
+  }
+
+  /* ═══════════════════════════════
+     STEP 3: 상세 결과
+     ═══════════════════════════════ */
+
+  const backBtn = (
+    <button onClick={() => setView('select')} style={{
+      display: 'inline-flex', alignItems: 'center', gap: '0.375rem',
+      padding: '0.5rem 1rem', borderRadius: '9999px', marginBottom: '1.25rem',
+      border: '1px solid var(--color-glass-border)', background: 'var(--color-glass)',
+      color: 'var(--color-text-muted)', fontSize: '0.8125rem', cursor: 'pointer',
+    }}>
+      {'\u2190 다른 운세 보기'}
+    </button>
+  );
+
+  /* ── 별자리 운세 상세 ── */
+  if (view === 'horoscope') {
+    return (
+      <div className="home-page">
+        {backBtn}
+
+        {/* 한줄 요약 */}
+        <div style={{ padding: '0.875rem 1rem', borderRadius: 'var(--radius-sm)', background: 'linear-gradient(135deg, rgba(139,92,246,0.1), rgba(251,191,36,0.1))', border: '1px solid var(--color-glass-border)', marginBottom: '1.25rem', textAlign: 'center' }}>
+          <p style={{ fontSize: '0.9375rem', fontWeight: 700, color: 'var(--color-accent)' }}>
+            {'\uD83D\uDCAB '}{horoscopeSummary}
           </p>
         </div>
-      </section>
 
-      {/* ── 1. 별자리 운세 ── */}
-      <section style={{
-        padding: '1.5rem', borderRadius: 'var(--radius-lg)',
-        background: 'var(--color-bg-card)', border: '1px solid var(--color-glass-border)',
-        marginBottom: '1rem',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
-          <span style={{ fontSize: '2rem' }}>{r.zodiac.icon}</span>
-          <h2 style={{ fontSize: '1.125rem', fontWeight: 800 }}>{'오늘의 별자리 운세'}</h2>
-          <span style={{ marginLeft: 'auto', fontSize: '0.8125rem', color: 'var(--color-gold)' }}>{stars(r.fortune.overall)}</span>
-        </div>
-        <p style={{ fontSize: '0.9375rem', color: 'var(--color-text-muted)', lineHeight: 1.7, marginBottom: '1rem' }}>
-          {r.fortune.fortuneText}
-        </p>
-        {/* 별점 그리드 */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginBottom: '1rem' }}>
-          {[
-            { label: '\u2764\uFE0F 연애', score: r.fortune.love, text: r.fortune.loveText },
-            { label: '\uD83D\uDCB0 금전', score: r.fortune.money, text: r.fortune.moneyText },
-            { label: '\uD83D\uDC9A 건강', score: r.fortune.health, text: r.fortune.healthText },
-            { label: '\uD83C\uDFB2 행운숫자', score: 0, text: String(r.fortune.luckyNumber) },
-          ].map((item, i) => (
-            <div key={i} style={{
-              padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--color-glass)',
-            }}>
-              <div style={{ fontSize: '0.75rem', color: 'var(--color-text-dim)', marginBottom: '0.25rem' }}>{item.label}</div>
-              {item.score > 0 ? (
-                <div style={{ fontSize: '0.8125rem', color: 'var(--color-gold)' }}>{stars(item.score)}</div>
-              ) : (
-                <div style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--color-accent)' }}>{item.text}</div>
-              )}
-            </div>
-          ))}
-        </div>
-        {/* 세부 운세 */}
-        <details style={{ marginTop: '0.5rem' }}>
-          <summary style={{ fontSize: '0.8125rem', color: 'var(--color-accent)', cursor: 'pointer', fontWeight: 600, padding: '0.5rem 0' }}>
-            {'상세 별자리 운세 보기'}
-          </summary>
-          <div style={{ padding: '0.75rem 0', fontSize: '0.875rem', color: 'var(--color-text-muted)', lineHeight: 1.7 }}>
-            <p style={{ marginBottom: '0.75rem' }}><strong style={{ color: 'var(--color-accent)' }}>{'종합운'}</strong>{' \u2014 '}{r.fortune.overallText}</p>
-            <p style={{ marginBottom: '0.75rem' }}><strong style={{ color: 'var(--color-accent)' }}>{'연애운'}</strong>{' \u2014 '}{r.fortune.loveText}</p>
-            <p style={{ marginBottom: '0.75rem' }}><strong style={{ color: 'var(--color-accent)' }}>{'금전운'}</strong>{' \u2014 '}{r.fortune.moneyText}</p>
-            <p><strong style={{ color: 'var(--color-accent)' }}>{'건강운'}</strong>{' \u2014 '}{r.fortune.healthText}</p>
-          </div>
-        </details>
-      </section>
-
-      {/* ── 2. 사주팔자 ── */}
-      <section style={{
-        padding: '1.5rem', borderRadius: 'var(--radius-lg)',
-        background: 'var(--color-bg-card)', border: '1px solid var(--color-glass-border)',
-        marginBottom: '1rem',
-      }}>
-        <h2 style={{ fontSize: '1.125rem', fontWeight: 800, marginBottom: '1rem' }}>
-          {'\uD83C\uDFB4 사주팔자'}
-        </h2>
-        {/* 4주 */}
-        <div className="saju-pillars" style={{ marginBottom: '1rem' }}>
-          {([
-            { label: '시주', p: r.saju.timePillar, hide: r.birthTime < 0 },
-            { label: '일주', p: r.saju.dayPillar, hide: false },
-            { label: '월주', p: r.saju.monthPillar, hide: false },
-            { label: '연주', p: r.saju.yearPillar, hide: false },
-          ] as const).map((item, i) => (
-            <div key={i} className="saju-pillar">
-              <div className="saju-pillar-label">{item.label}</div>
-              <div className="saju-pillar-value">
-                {item.hide ? '- -' : `${item.p.stemHanja}${item.p.branchHanja}`}
-              </div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--color-text-dim)', marginTop: '0.25rem' }}>
-                {item.hide ? '미정' : `${item.p.stemKo}${item.p.branchKo}`}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* 오행 비율 */}
-        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '1.25rem' }}>
-          {r.saju.fiveElementPercents.map((pct, idx) => (
-            <div key={idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.25rem', minWidth: '3.25rem' }}>
-              <div style={{ width: '2.25rem', background: 'rgba(255,255,255,0.06)', borderRadius: '0.375rem', overflow: 'hidden', height: '4rem', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-                <div style={{ height: `${Math.max(pct, 5)}%`, background: FIVE_ELEMENTS_COLOR[idx], borderRadius: '0.375rem 0.375rem 0 0', transition: 'height 0.5s', minHeight: '4px' }} />
-              </div>
-              <span style={{ fontSize: '0.75rem', fontWeight: 700, color: FIVE_ELEMENTS_COLOR[idx] }}>{FIVE_ELEMENTS_NAME[idx]}</span>
-              <span style={{ fontSize: '0.625rem', color: 'var(--color-text-dim)' }}>{pct}{'%'}</span>
-            </div>
-          ))}
-        </div>
-
-        {/* 성격 요약 */}
-        <p style={{ fontSize: '0.9375rem', color: 'var(--color-text-muted)', lineHeight: 1.7, marginBottom: '0.75rem' }}>
-          {r.saju.personality}
-        </p>
-
-        <details>
-          <summary style={{ fontSize: '0.8125rem', color: 'var(--color-accent)', cursor: 'pointer', fontWeight: 600, padding: '0.5rem 0' }}>
-            {'상세 사주 분석 보기'}
-          </summary>
-          <div style={{ padding: '0.75rem 0' }}>
-            <div className="saju-section">
-              <div className="saju-section-title">{'\uD83D\uDCBC 적성 및 직업'}</div>
-              <p className="saju-section-text">{r.saju.career}</p>
-            </div>
-            <div className="saju-section">
-              <div className="saju-section-title">{'\uD83D\uDCB0 재물운'}</div>
-              <p className="saju-section-text">{r.saju.wealth}</p>
-            </div>
-            <div className="saju-section">
-              <div className="saju-section-title">{'\u2764\uFE0F 연애운'}</div>
-              <p className="saju-section-text">{r.saju.love}</p>
-            </div>
-            <div className="saju-section">
-              <div className="saju-section-title">{'\uD83D\uDC9A 건강운'}</div>
-              <p className="saju-section-text">{r.saju.health}</p>
-            </div>
-            <div className="saju-section" style={{ borderBottom: 'none' }}>
-              <div className="saju-section-title">{'\uD83C\uDF1F 올해의 운세'}</div>
-              <p className="saju-section-text">{r.saju.yearly}</p>
+        <section style={{ padding: '1.5rem', borderRadius: 'var(--radius-lg)', background: 'var(--color-bg-card)', border: '1px solid var(--color-glass-border)', marginBottom: '1rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
+            <span style={{ fontSize: '2.5rem' }}>{r.zodiac.icon}</span>
+            <div>
+              <h1 style={{ fontSize: '1.25rem', fontWeight: 800 }}>{r.name}{'님의 '}{r.zodiac.name}{' 운세'}</h1>
+              <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-dim)' }}>{r.zodiac.dateRange}{' · '}{r.zodiac.element}{' 원소 · '}{dateStr}</p>
             </div>
           </div>
-        </details>
-      </section>
 
-      {/* ── 3. 오늘의 타로 ── */}
-      <section style={{
-        padding: '1.5rem', borderRadius: 'var(--radius-lg)',
-        background: 'var(--gradient-card)', border: '1px solid var(--color-glass-border)',
-        textAlign: 'center', marginBottom: '1rem',
-      }}>
-        <h2 style={{ fontSize: '1.125rem', fontWeight: 800, marginBottom: '1rem' }}>
-          {'\uD83C\uDCCF 오늘의 타로 1카드'}
-        </h2>
-        <div style={{ fontSize: '3.5rem', marginBottom: '0.375rem', filter: 'drop-shadow(0 0 16px rgba(251,191,36,0.2))', transform: r.tarot.isReversed ? 'rotate(180deg)' : 'none' }}>
-          {r.tarot.card.emoji}
-        </div>
-        <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--color-gold)', marginBottom: '0.25rem' }}>
-          {r.tarot.card.nameKo}
-        </h3>
-        <span style={{
-          display: 'inline-block', padding: '0.1875rem 0.5rem', borderRadius: '9999px', fontSize: '0.6875rem', fontWeight: 600, marginBottom: '0.75rem',
-          background: r.tarot.isReversed ? 'rgba(248,113,113,0.15)' : 'rgba(52,211,153,0.15)',
-          color: r.tarot.isReversed ? '#f87171' : '#34d399',
-        }}>
-          {r.tarot.isReversed ? '\u21BB 역방향' : '\u2191 정방향'}
-        </span>
-        <p style={{ fontSize: '0.8125rem', color: 'var(--color-accent)', marginBottom: '0.5rem' }}>
-          {r.tarot.isReversed ? r.tarot.card.reversedKeywords : r.tarot.card.uprightKeywords}
-        </p>
-        <p style={{ fontSize: '0.9375rem', color: 'var(--color-text-muted)', lineHeight: 1.7, marginBottom: '0.75rem', textAlign: 'left' }}>
-          {r.tarot.isReversed ? r.tarot.card.reversedMeaning : r.tarot.card.uprightMeaning}
-        </p>
-        <details>
-          <summary style={{ fontSize: '0.8125rem', color: 'var(--color-accent)', cursor: 'pointer', fontWeight: 600, padding: '0.5rem 0' }}>
-            {'연애 · 금전 · 직업 해석 보기'}
-          </summary>
-          <div style={{ padding: '0.75rem 0', textAlign: 'left', fontSize: '0.875rem', color: 'var(--color-text-muted)', lineHeight: 1.7 }}>
-            <p style={{ marginBottom: '0.75rem' }}><strong style={{ color: 'var(--color-accent)' }}>{'\u2764\uFE0F 연애'}</strong>{' \u2014 '}{r.tarot.isReversed ? r.tarot.card.loveReversed : r.tarot.card.loveUpright}</p>
-            <p style={{ marginBottom: '0.75rem' }}><strong style={{ color: 'var(--color-accent)' }}>{'\uD83D\uDCB0 금전'}</strong>{' \u2014 '}{r.tarot.isReversed ? r.tarot.card.moneyReversed : r.tarot.card.moneyUpright}</p>
-            <p><strong style={{ color: 'var(--color-accent)' }}>{'\uD83D\uDCBC 직업'}</strong>{' \u2014 '}{r.tarot.isReversed ? r.tarot.card.careerReversed : r.tarot.card.careerUpright}</p>
+          {/* 별자리 성격 */}
+          <div style={{ padding: '0.875rem', borderRadius: 'var(--radius-sm)', background: 'var(--color-glass)', marginBottom: '1.25rem' }}>
+            <div style={{ fontSize: '0.75rem', color: 'var(--color-accent)', fontWeight: 600, marginBottom: '0.375rem' }}>{'\uD83D\uDD2E '}{r.zodiac.name}{' 성격'}</div>
+            <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', lineHeight: 1.7 }}>{zodiacPersonality}</p>
           </div>
-        </details>
-        <Link href="/tarot" style={{
-          display: 'inline-block', marginTop: '0.75rem', padding: '0.5rem 1.25rem', borderRadius: '9999px',
-          border: '1px solid var(--color-glass-border)', background: 'var(--color-glass)',
-          color: 'var(--color-text-muted)', fontSize: '0.8125rem', textDecoration: 'none',
-        }}>
-          {'3장 타로 스프레드 해보기 \u2192'}
-        </Link>
-      </section>
 
-      {/* ── 4. 행운의 로또 번호 ── */}
-      <section style={{
-        padding: '1.25rem', borderRadius: 'var(--radius-lg)',
-        background: 'var(--color-bg-card)', border: '1px solid var(--color-glass-border)',
-        textAlign: 'center', marginBottom: '1rem',
-      }}>
-        <h2 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--color-accent)', marginBottom: '0.75rem' }}>
-          {'\uD83C\uDFB0 오늘의 행운 번호'}
-        </h2>
-        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', marginBottom: '0.5rem' }}>
-          {r.luckyNumbers.map((num, i) => (
-            <span key={i} style={{
-              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-              width: '2.75rem', height: '2.75rem', borderRadius: '50%',
-              background: 'var(--gradient-primary)', color: '#fff',
-              fontWeight: 800, fontSize: '1rem', boxShadow: '0 2px 8px var(--color-cta-glow)',
-            }}>
-              {num}
+          {/* 종합 운세 */}
+          <p style={{ fontSize: '1rem', color: 'var(--color-text)', lineHeight: 1.8, marginBottom: '1.25rem', fontWeight: 500 }}>
+            {r.fortune.fortuneText}
+          </p>
+
+          {/* 별점 상세 */}
+          <div style={{ display: 'grid', gap: '0.875rem', marginBottom: '1.25rem' }}>
+            {[
+              { label: '\u2B50 종합운', score: r.fortune.overall, text: r.fortune.overallText, color: '#a78bfa' },
+              { label: '\u2764\uFE0F 연애운', score: r.fortune.love, text: r.fortune.loveText, color: '#f472b6' },
+              { label: '\uD83D\uDCB0 금전운', score: r.fortune.money, text: r.fortune.moneyText, color: '#fbbf24' },
+              { label: '\uD83D\uDC9A 건강운', score: r.fortune.health, text: r.fortune.healthText, color: '#34d399' },
+            ].map((item, i) => (
+              <div key={i} style={{ padding: '1rem', borderRadius: 'var(--radius-sm)', background: 'var(--color-glass)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                  <span style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--color-text)' }}>{item.label}</span>
+                  <span style={{ fontSize: '0.8125rem', color: item.color }}>{stars(item.score)}</span>
+                </div>
+                {scoreBar(item.score, item.color)}
+                <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', lineHeight: 1.7, marginTop: '0.625rem' }}>{item.text}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* 오늘의 조언 */}
+          <div style={{ padding: '1rem', borderRadius: 'var(--radius-sm)', background: 'var(--color-gold-soft)', textAlign: 'center' }}>
+            <div style={{ fontSize: '0.75rem', color: 'var(--color-text-dim)', marginBottom: '0.25rem' }}>{'오늘의 조언'}</div>
+            <p style={{ fontSize: '1rem', color: 'var(--color-gold)', fontWeight: 700, fontStyle: 'italic' }}>
+              {'"'}{r.fortune.advice}{'"'}
+            </p>
+          </div>
+
+          {/* 행운 정보 */}
+          <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', marginTop: '1rem' }}>
+            <span style={{ padding: '0.375rem 0.75rem', borderRadius: '9999px', background: 'var(--color-gold-soft)', color: 'var(--color-gold)', fontSize: '0.8125rem', fontWeight: 600 }}>
+              {'행운의 색 : '}{r.fortune.luckyColor}
             </span>
-          ))}
-        </div>
-        <p style={{ fontSize: '0.625rem', color: 'var(--color-text-dim)' }}>
-          {'* 재미로만 참고하세요. 실제 당첨과는 관련이 없습니다.'}
-        </p>
-      </section>
+            <span style={{ padding: '0.375rem 0.75rem', borderRadius: '9999px', background: 'rgba(139,92,246,0.15)', color: 'var(--color-accent)', fontSize: '0.8125rem', fontWeight: 600 }}>
+              {'행운의 수 : '}{r.fortune.luckyNumber}
+            </span>
+          </div>
+        </section>
 
-      {/* ── 광고 영역 ── */}
-      <section style={{
-        padding: '1.25rem', borderRadius: '1rem',
-        background: 'linear-gradient(135deg, rgba(139,92,246,0.08), rgba(251,191,36,0.08))',
-        border: '1px solid var(--color-border)', textAlign: 'center', marginBottom: '1rem',
-      }}>
-        <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.5rem' }}>
-          {'\uD83C\uDF1F 오늘의 행운을 더 높이는 방법'}
-        </h3>
-        <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-dim)', marginBottom: '0.75rem' }}>
-          {'사주에 맞는 행운 아이템과 여행지를 확인해보세요'}
-        </p>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', justifyContent: 'center' }}>
-          <a href="https://s.click.aliexpress.com/e/_olzd8TL" target="_blank" rel="sponsored nofollow noopener noreferrer" className="button primary" style={{ fontSize: '0.875rem' }}>
-            {'\uD83D\uDECD\uFE0F 행운 아이템'}
-          </a>
-          <a href="https://www.trip.com/t/Ik6QQwDcjT2" target="_blank" rel="sponsored nofollow noopener noreferrer" className="button secondary" style={{ fontSize: '0.875rem' }}>
-            {'\u2708\uFE0F 행운의 여행지'}
-          </a>
-        </div>
-        <p style={{ fontSize: '0.6875rem', color: 'var(--color-text-dim)', marginTop: '0.5rem' }}>
-          {'제휴 링크를 통해 구매 시 운세미 운영에 도움이 됩니다'}
-        </p>
-      </section>
+        {/* 광고 */}
+        <section style={{ padding: '1rem', borderRadius: 'var(--radius-sm)', background: 'linear-gradient(135deg, rgba(139,92,246,0.06), rgba(251,191,36,0.06))', border: '1px solid var(--color-border)', textAlign: 'center', marginBottom: '1rem' }}>
+          <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-dim)', marginBottom: '0.5rem' }}>{'오늘의 행운을 더 높이는 방법'}</p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', justifyContent: 'center' }}>
+            <a href="https://s.click.aliexpress.com/e/_olzd8TL" target="_blank" rel="sponsored nofollow noopener noreferrer" className="button primary" style={{ fontSize: '0.8125rem', padding: '0.5rem 1rem' }}>
+              {'\uD83D\uDECD\uFE0F 행운 아이템'}
+            </a>
+            <a href="https://www.trip.com/t/Ik6QQwDcjT2" target="_blank" rel="sponsored nofollow noopener noreferrer" className="button secondary" style={{ fontSize: '0.8125rem', padding: '0.5rem 1rem' }}>
+              {'\u2708\uFE0F 행운의 여행지'}
+            </a>
+          </div>
+          <p style={{ fontSize: '0.625rem', color: 'var(--color-text-dim)', marginTop: '0.375rem' }}>{'제휴 링크입니다'}</p>
+        </section>
 
-      {/* ── 더 알아보기 + 다시하기 ── */}
-      <section style={{ marginBottom: '1rem' }}>
-        <p style={{ textAlign: 'center', fontSize: '0.8125rem', color: 'var(--color-text-dim)', marginBottom: '0.75rem' }}>
-          {'더 자세히 알아보기'}
-        </p>
-        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-          {[
-            { href: '/horoscope', label: '\u2B50 12별자리 전체' },
-            { href: '/saju', label: '\uD83C\uDFB4 사주풀이' },
-            { href: '/tarot', label: '\uD83C\uDCCF 3장 타로' },
-            { href: '/dream', label: '\uD83D\uDCAD 꿈해몽' },
-          ].map(s => (
-            <Link key={s.href} href={s.href} style={{
-              padding: '0.5rem 1rem', borderRadius: '9999px',
+        {backBtn}
+      </div>
+    );
+  }
+
+  /* ── 사주팔자 상세 ── */
+  if (view === 'saju') {
+    return (
+      <div className="home-page">
+        {backBtn}
+
+        {/* 한줄 요약 */}
+        <div style={{ padding: '0.875rem 1rem', borderRadius: 'var(--radius-sm)', background: 'linear-gradient(135deg, rgba(139,92,246,0.1), rgba(251,191,36,0.1))', border: '1px solid var(--color-glass-border)', marginBottom: '1.25rem', textAlign: 'center' }}>
+          <p style={{ fontSize: '0.9375rem', fontWeight: 700, color: 'var(--color-accent)' }}>
+            {'\uD83C\uDFB4 '}{sajuSummary}
+          </p>
+        </div>
+
+        <section style={{ padding: '1.5rem', borderRadius: 'var(--radius-lg)', background: 'var(--color-bg-card)', border: '1px solid var(--color-glass-border)', marginBottom: '1rem' }}>
+          <h1 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '0.375rem' }}>
+            {r.name}{'님의 사주팔자'}
+          </h1>
+          <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-dim)', marginBottom: '1.25rem' }}>
+            {r.birthYear}{'년생 · '}{r.chineseZodiac.emoji}{' '}{r.chineseZodiac.name}{'띠 · '}{r.saju.yinYang === 'yang' ? '양(陽)' : '음(陰)'}{' · '}{FIVE_ELEMENTS_NAME[r.saju.dominantElement]}{'('}
+            {(['木','火','土','金','水'])[r.saju.dominantElement]}{')'}{' 기운 우세'}
+          </p>
+
+          {/* 4주 */}
+          <div className="saju-pillars" style={{ marginBottom: '1.25rem' }}>
+            {([
+              { label: '시주(時柱)', desc: '말년운', p: r.saju.timePillar, hide: r.birthTime < 0 },
+              { label: '일주(日柱)', desc: '본인', p: r.saju.dayPillar, hide: false },
+              { label: '월주(月柱)', desc: '청년운', p: r.saju.monthPillar, hide: false },
+              { label: '연주(年柱)', desc: '초년운', p: r.saju.yearPillar, hide: false },
+            ] as const).map((item, i) => (
+              <div key={i} className="saju-pillar" style={{ padding: '0.75rem 0.5rem' }}>
+                <div className="saju-pillar-label">{item.label}</div>
+                <div className="saju-pillar-value" style={{ fontSize: '1.5rem' }}>
+                  {item.hide ? '- -' : `${item.p.stemHanja}${item.p.branchHanja}`}
+                </div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--color-text-dim)', marginTop: '0.25rem' }}>
+                  {item.hide ? '미정' : `${item.p.stemKo}${item.p.branchKo}`}
+                </div>
+                <div style={{ fontSize: '0.625rem', color: 'var(--color-accent)', marginTop: '0.25rem' }}>
+                  {item.desc}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* 오행 비율 */}
+          <div style={{ padding: '1rem', borderRadius: 'var(--radius-sm)', background: 'var(--color-glass)', marginBottom: '1.25rem' }}>
+            <div style={{ fontSize: '0.8125rem', fontWeight: 700, marginBottom: '0.75rem', color: 'var(--color-text)' }}>{'오행(五行) 분석'}</div>
+            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '0.75rem' }}>
+              {r.saju.fiveElementPercents.map((pct, idx) => (
+                <div key={idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.25rem', minWidth: '3.5rem' }}>
+                  <div style={{ width: '2.5rem', background: 'rgba(255,255,255,0.06)', borderRadius: '0.375rem', overflow: 'hidden', height: '5rem', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+                    <div style={{ height: `${Math.max(pct, 5)}%`, background: FIVE_ELEMENTS_COLOR[idx], borderRadius: '0.375rem 0.375rem 0 0', transition: 'height 0.5s', minHeight: '4px' }} />
+                  </div>
+                  <span style={{ fontSize: '0.8125rem', fontWeight: 700, color: FIVE_ELEMENTS_COLOR[idx] }}>{FIVE_ELEMENTS_NAME[idx]}</span>
+                  <span style={{ fontSize: '0.6875rem', color: 'var(--color-text-dim)' }}>{pct}{'%'}</span>
+                </div>
+              ))}
+            </div>
+            <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-dim)', textAlign: 'center' }}>
+              {'주요 기운: '}<strong style={{ color: FIVE_ELEMENTS_COLOR[r.saju.dominantElement] }}>{FIVE_ELEMENTS_NAME[r.saju.dominantElement]}</strong>
+              {' · 보완 필요: '}<strong style={{ color: FIVE_ELEMENTS_COLOR[r.saju.weakElement] }}>{FIVE_ELEMENTS_NAME[r.saju.weakElement]}</strong>
+            </p>
+          </div>
+
+          {/* 오행 궁합 조언 */}
+          <div style={{ padding: '0.875rem', borderRadius: 'var(--radius-sm)', background: 'var(--color-gold-soft)', marginBottom: '1.25rem' }}>
+            <div style={{ fontSize: '0.75rem', color: 'var(--color-text-dim)', marginBottom: '0.375rem' }}>{'오행 궁합 조언'}</div>
+            <p style={{ fontSize: '0.8125rem', color: 'var(--color-gold)', lineHeight: 1.6 }}>
+              {'\u2705 '}{elementAdvice.good}<br/>
+              {'\u26A0\uFE0F '}{elementAdvice.avoid}<br/>
+              {'\uD83D\uDCA1 '}{elementAdvice.tip}
+            </p>
+          </div>
+
+          {/* 성격 */}
+          <div className="saju-section">
+            <div className="saju-section-title">{'\uD83E\uDDD1 성격 분석'}</div>
+            <p className="saju-section-text">{r.saju.personality}</p>
+          </div>
+
+          {/* 직업 */}
+          <div className="saju-section">
+            <div className="saju-section-title">{'\uD83D\uDCBC 적성 및 직업'}</div>
+            <p className="saju-section-text">{r.saju.career}</p>
+          </div>
+
+          {/* 재물운 */}
+          <div className="saju-section">
+            <div className="saju-section-title">{'\uD83D\uDCB0 재물운'}</div>
+            <p className="saju-section-text">{r.saju.wealth}</p>
+          </div>
+
+          {/* 연애운 */}
+          <div className="saju-section">
+            <div className="saju-section-title">{'\u2764\uFE0F 연애운'}</div>
+            <p className="saju-section-text">{r.saju.love}</p>
+          </div>
+
+          {/* 건강운 */}
+          <div className="saju-section">
+            <div className="saju-section-title">{'\uD83D\uDC9A 건강운'}</div>
+            <p className="saju-section-text">{r.saju.health}</p>
+          </div>
+
+          {/* 올해의 운세 */}
+          <div className="saju-section" style={{ borderBottom: 'none' }}>
+            <div className="saju-section-title">{'\uD83C\uDF1F '}{today.getFullYear()}{'년 운세'}</div>
+            <p className="saju-section-text">{r.saju.yearly}</p>
+          </div>
+        </section>
+
+        {backBtn}
+      </div>
+    );
+  }
+
+  /* ── 타로카드 상세 ── */
+  if (view === 'tarot') {
+    return (
+      <div className="home-page">
+        {backBtn}
+
+        {/* 한줄 요약 */}
+        <div style={{ padding: '0.875rem 1rem', borderRadius: 'var(--radius-sm)', background: 'linear-gradient(135deg, rgba(139,92,246,0.1), rgba(251,191,36,0.1))', border: '1px solid var(--color-glass-border)', marginBottom: '1.25rem', textAlign: 'center' }}>
+          <p style={{ fontSize: '0.9375rem', fontWeight: 700, color: 'var(--color-accent)' }}>
+            {'\uD83C\uDCCF '}{tarotSummary}
+          </p>
+        </div>
+
+        {/* 1카드 리딩 */}
+        <section style={{ padding: '1.5rem', borderRadius: 'var(--radius-lg)', background: 'var(--gradient-card)', border: '1px solid var(--color-glass-border)', textAlign: 'center', marginBottom: '1rem' }}>
+          <h1 style={{ fontSize: '1.125rem', fontWeight: 800, marginBottom: '1.25rem' }}>
+            {r.name}{'님의 오늘의 타로'}
+          </h1>
+
+          <div style={{ fontSize: '4rem', marginBottom: '0.5rem', filter: 'drop-shadow(0 0 20px rgba(251,191,36,0.2))', transform: r.tarot.isReversed ? 'rotate(180deg)' : 'none', transition: 'transform 0.5s' }}>
+            {r.tarot.card.emoji}
+          </div>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--color-gold)', marginBottom: '0.25rem' }}>
+            {r.tarot.card.nameKo}
+          </h2>
+          <p style={{ fontSize: '0.75rem', color: 'var(--color-text-dim)', marginBottom: '0.5rem' }}>{r.tarot.card.name}</p>
+          <span style={{
+            display: 'inline-block', padding: '0.25rem 0.625rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 600, marginBottom: '1rem',
+            background: r.tarot.isReversed ? 'rgba(248,113,113,0.15)' : 'rgba(52,211,153,0.15)',
+            color: r.tarot.isReversed ? '#f87171' : '#34d399',
+          }}>
+            {r.tarot.isReversed ? '\u21BB 역방향 (Reversed)' : '\u2191 정방향 (Upright)'}
+          </span>
+
+          {/* 키워드 */}
+          <div style={{ display: 'flex', gap: '0.375rem', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '1rem' }}>
+            {(r.tarot.isReversed ? r.tarot.card.reversedKeywords : r.tarot.card.uprightKeywords).split(', ').map((kw, i) => (
+              <span key={i} style={{ padding: '0.25rem 0.5rem', borderRadius: '9999px', background: 'var(--color-glass)', border: '1px solid var(--color-glass-border)', fontSize: '0.75rem', color: 'var(--color-accent)' }}>
+                {kw}
+              </span>
+            ))}
+          </div>
+
+          {/* 의미 해석 */}
+          <p style={{ fontSize: '1rem', color: 'var(--color-text)', lineHeight: 1.8, marginBottom: '1.25rem', textAlign: 'left', fontWeight: 500 }}>
+            {r.tarot.isReversed ? r.tarot.card.reversedMeaning : r.tarot.card.uprightMeaning}
+          </p>
+
+          {/* 분야별 해석 */}
+          <div style={{ textAlign: 'left' }}>
+            {[
+              { label: '\u2764\uFE0F 연애', text: r.tarot.isReversed ? r.tarot.card.loveReversed : r.tarot.card.loveUpright },
+              { label: '\uD83D\uDCB0 금전', text: r.tarot.isReversed ? r.tarot.card.moneyReversed : r.tarot.card.moneyUpright },
+              { label: '\uD83D\uDCBC 직업', text: r.tarot.isReversed ? r.tarot.card.careerReversed : r.tarot.card.careerUpright },
+            ].map((item, i) => (
+              <div key={i} style={{ padding: '0.875rem', borderRadius: 'var(--radius-sm)', background: 'var(--color-glass)', marginBottom: '0.625rem' }}>
+                <div style={{ fontSize: '0.8125rem', fontWeight: 700, color: 'var(--color-accent)', marginBottom: '0.375rem' }}>{item.label}</div>
+                <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', lineHeight: 1.7 }}>{item.text}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* 3카드 스프레드 */}
+        <section style={{ padding: '1.5rem', borderRadius: 'var(--radius-lg)', background: 'var(--color-bg-card)', border: '1px solid var(--color-glass-border)', marginBottom: '1rem' }}>
+          <h2 style={{ fontSize: '1.125rem', fontWeight: 800, marginBottom: '0.25rem', textAlign: 'center' }}>
+            {'3카드 스프레드'}
+          </h2>
+          <p style={{ fontSize: '0.75rem', color: 'var(--color-text-dim)', textAlign: 'center', marginBottom: '1.25rem' }}>
+            {'과거 · 현재 · 미래의 흐름을 읽어봅니다'}
+          </p>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
+            {r.threeCards.map((tc, i) => (
+              <div key={i} style={{ textAlign: 'center', padding: '0.875rem 0.5rem', borderRadius: 'var(--radius-sm)', background: 'var(--color-glass)' }}>
+                <div style={{ fontSize: '0.6875rem', color: 'var(--color-text-dim)', marginBottom: '0.375rem', fontWeight: 600 }}>{tc.label}</div>
+                <div style={{ fontSize: '2rem', marginBottom: '0.25rem', transform: tc.isReversed ? 'rotate(180deg)' : 'none' }}>
+                  {tc.card.emoji}
+                </div>
+                <div style={{ fontSize: '0.8125rem', fontWeight: 700, color: 'var(--color-text)', marginBottom: '0.125rem' }}>{tc.card.nameKo}</div>
+                <div style={{ fontSize: '0.625rem', color: tc.isReversed ? '#f87171' : '#34d399', fontWeight: 600 }}>
+                  {tc.isReversed ? '역방향' : '정방향'}
+                </div>
+                <p style={{ fontSize: '0.6875rem', color: 'var(--color-text-dim)', lineHeight: 1.5, marginTop: '0.375rem' }}>
+                  {(tc.isReversed ? tc.card.reversedKeywords : tc.card.uprightKeywords).split(', ').slice(0, 2).join(', ')}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ marginTop: '1rem', textAlign: 'center' }}>
+            <Link href="/tarot" style={{
+              display: 'inline-block', padding: '0.5rem 1.25rem', borderRadius: '9999px',
               border: '1px solid var(--color-glass-border)', background: 'var(--color-glass)',
               color: 'var(--color-text-muted)', fontSize: '0.8125rem', textDecoration: 'none',
             }}>
-              {s.label}
+              {'직접 타로 카드 뽑기 \u2192'}
             </Link>
-          ))}
-        </div>
-      </section>
+          </div>
+        </section>
 
-      <button onClick={() => setResult(null)} className="submit-btn">
-        {'\uD83D\uDD04 다른 정보로 다시 보기'}
-      </button>
-    </div>
-  );
+        {backBtn}
+      </div>
+    );
+  }
+
+  /* ── 행운의 번호 상세 ── */
+  if (view === 'lucky') {
+    return (
+      <div className="home-page">
+        {backBtn}
+
+        <section style={{ padding: '2rem 1.5rem', borderRadius: 'var(--radius-lg)', background: 'var(--gradient-card)', border: '1px solid var(--color-glass-border)', textAlign: 'center', marginBottom: '1rem' }}>
+          <h1 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '0.25rem' }}>
+            {r.name}{'님의 오늘의 행운 번호'}
+          </h1>
+          <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-dim)', marginBottom: '1.5rem' }}>
+            {dateStr}{' · '}{r.zodiac.name}{' · '}{FIVE_ELEMENTS_NAME[r.saju.dominantElement]}{'('}
+            {(['木','火','土','金','水'])[r.saju.dominantElement]}{') 기반 산출'}
+          </p>
+
+          {/* 메인 번호 */}
+          <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
+            {r.luckyNumbers.map((num, i) => (
+              <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.25rem' }}>
+                <span style={{
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  width: '3.5rem', height: '3.5rem', borderRadius: '50%',
+                  background: 'var(--gradient-primary)', color: '#fff',
+                  fontWeight: 800, fontSize: '1.25rem', boxShadow: '0 4px 12px var(--color-cta-glow)',
+                }}>
+                  {num}
+                </span>
+                <span style={{ fontSize: '0.625rem', color: 'var(--color-text-dim)' }}>{i + 1}{'번째'}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* 추가 럭키 정보 */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1.25rem', textAlign: 'left' }}>
+            <div style={{ padding: '0.875rem', borderRadius: 'var(--radius-sm)', background: 'var(--color-glass)' }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--color-text-dim)', marginBottom: '0.25rem' }}>{'행운의 색'}</div>
+              <div style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--color-gold)' }}>{'\uD83C\uDF08 '}{r.fortune.luckyColor}</div>
+            </div>
+            <div style={{ padding: '0.875rem', borderRadius: 'var(--radius-sm)', background: 'var(--color-glass)' }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--color-text-dim)', marginBottom: '0.25rem' }}>{'행운의 수'}</div>
+              <div style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--color-accent)' }}>{'\u2B50 '}{r.fortune.luckyNumber}</div>
+            </div>
+            <div style={{ padding: '0.875rem', borderRadius: 'var(--radius-sm)', background: 'var(--color-glass)' }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--color-text-dim)', marginBottom: '0.25rem' }}>{'띠'}</div>
+              <div style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--color-text)' }}>{r.chineseZodiac.emoji}{' '}{r.chineseZodiac.name}{'띠'}</div>
+            </div>
+            <div style={{ padding: '0.875rem', borderRadius: 'var(--radius-sm)', background: 'var(--color-glass)' }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--color-text-dim)', marginBottom: '0.25rem' }}>{'오행'}</div>
+              <div style={{ fontSize: '1rem', fontWeight: 700, color: FIVE_ELEMENTS_COLOR[r.saju.dominantElement] }}>{FIVE_ELEMENTS_NAME[r.saju.dominantElement]}{'('}
+                {(['木','火','土','金','水'])[r.saju.dominantElement]}{')'}
+              </div>
+            </div>
+          </div>
+
+          {/* 팁 */}
+          <div style={{ padding: '0.875rem', borderRadius: 'var(--radius-sm)', background: 'var(--color-gold-soft)' }}>
+            <p style={{ fontSize: '0.8125rem', color: 'var(--color-gold)', lineHeight: 1.6 }}>
+              {'\uD83D\uDCA1 '}{elementAdvice.tip}
+            </p>
+          </div>
+
+          <p style={{ fontSize: '0.625rem', color: 'var(--color-text-dim)', marginTop: '1rem' }}>
+            {'* 재미로만 참고하세요. 실제 당첨과는 관련이 없습니다.'}
+          </p>
+        </section>
+
+        {/* 광고 */}
+        <section style={{ padding: '1rem', borderRadius: 'var(--radius-sm)', background: 'linear-gradient(135deg, rgba(139,92,246,0.06), rgba(251,191,36,0.06))', border: '1px solid var(--color-border)', textAlign: 'center', marginBottom: '1rem' }}>
+          <p style={{ fontSize: '0.8125rem', fontWeight: 600, marginBottom: '0.5rem' }}>{'\uD83C\uDF1F 행운을 높이는 아이템'}</p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', justifyContent: 'center' }}>
+            <a href="https://s.click.aliexpress.com/e/_olzd8TL" target="_blank" rel="sponsored nofollow noopener noreferrer" className="button primary" style={{ fontSize: '0.8125rem', padding: '0.5rem 1rem' }}>
+              {'\uD83D\uDECD\uFE0F 행운 아이템'}
+            </a>
+            <a href="https://www.trip.com/t/Ik6QQwDcjT2" target="_blank" rel="sponsored nofollow noopener noreferrer" className="button secondary" style={{ fontSize: '0.8125rem', padding: '0.5rem 1rem' }}>
+              {'\u2708\uFE0F 행운의 여행지'}
+            </a>
+          </div>
+          <p style={{ fontSize: '0.625rem', color: 'var(--color-text-dim)', marginTop: '0.375rem' }}>{'제휴 링크입니다'}</p>
+        </section>
+
+        {backBtn}
+      </div>
+    );
+  }
+
+  return null;
 }
