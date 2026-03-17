@@ -124,7 +124,7 @@ export default function ProductAdBanner({
             <div className="product-ad__img-wrap">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={p.image} alt={p.title} className="product-ad__img" loading="lazy" />
-              <span className="product-ad__source">{p.source === 'coupang' ? '쿠팡' : '네이버'}</span>
+              <span className="product-ad__source">쿠팡</span>
             </div>
             <div className="product-ad__info">
               <div className="product-ad__name">{p.title}</div>
@@ -135,9 +135,7 @@ export default function ProductAdBanner({
       </div>
 
       <div className="promo-banner__note">
-        {products[0]?.source === 'coupang'
-          ? '이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다'
-          : '제휴 링크를 통해 구매 시 운세미 운영에 도움이 됩니다'}
+        이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다
       </div>
     </div>
   );
