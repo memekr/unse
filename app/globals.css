@@ -2122,23 +2122,24 @@ img {
   box-shadow: 0 4px 20px rgba(139, 92, 246, 0.15);
 }
 
-.product-ad__img-wrap {
+.product-ad__emoji-wrap {
   position: relative;
   width: 100%;
-  aspect-ratio: 1;
-  background: rgba(255, 255, 255, 0.02);
+  aspect-ratio: 1.2;
+  background: rgba(139, 92, 246, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   overflow: hidden;
 }
 
-.product-ad__img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+.product-ad__emoji {
+  font-size: 2.2rem;
   transition: transform 0.3s ease;
 }
 
-.product-ad__card:hover .product-ad__img {
-  transform: scale(1.05);
+.product-ad__card:hover .product-ad__emoji {
+  transform: scale(1.2);
 }
 
 .product-ad__source {
@@ -2164,6 +2165,7 @@ img {
 .product-ad__name {
   font-size: 0.75rem;
   line-height: 1.3;
+  font-weight: 600;
   color: var(--color-text);
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -2172,10 +2174,10 @@ img {
   word-break: keep-all;
 }
 
-.product-ad__price {
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: #c4b5fd;
+.product-ad__keyword {
+  font-size: 0.65rem;
+  color: var(--color-text-muted);
+  opacity: 0.7;
 }
 
 /* 로딩 스켈레톤 */

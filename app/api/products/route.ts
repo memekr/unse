@@ -1,62 +1,54 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
+import {
+  pickItems,
+  coupangSearchUrl,
+  type FortuneContext,
+  type PoolItem,
+} from '@/lib/product-pool';
 
 /* ─────────────────────────────────────────
- * 쿠팡파트너스 상품 검색 API
+ * 쿠팡파트너스 추천 상품 API (딥링크 방식)
  *
- * GET /api/products?keyword=행운+팔찌&limit=4
+ * POST /api/products  body: FortuneContext
  *
- * - 시간당 10회 제한 → 1시간 메모리 캐시
- * - API 키 미설정 시 빈 배열 반환 (프론트에서 기존 배너 폴백)
+ * 1. 운세 결과 → 상품 풀에서 아이템 선택
+ * 2. 쿠팡 검색 URL 생성
+ * 3. 딥링크 API로 제휴 추적 링크 변환
+ * 4. 실패 시 원본 쿠팡 검색 URL 반환 (항상 상품 표시)
  * ───────────────────────────────────────── */
 
 export type ProductItem = {
   id: string;
   title: string;
-  price: string;
-  image: string;
-  link: string;
-  source: 'coupang';
-  category?: string;
-};
-
-type ProductResponse = {
-  products: ProductItem[];
+  emoji: string;
   keyword: string;
-  cached: boolean;
+  link: string;
+  isAffiliate: boolean;
+  source: 'coupang';
 };
 
-// ── 메모리 캐시 (1시간) ──
+// ── 딥링크 캐시 (1시간) ──
 
-const cache = new Map<string, { data: ProductItem[]; ts: number }>();
+const deeplinkCache = new Map<string, { url: string; ts: number }>();
 const CACHE_TTL = 60 * 60 * 1000;
 
-function getCached(key: string): ProductItem[] | null {
-  const entry = cache.get(key);
-  if (!entry) return null;
-  if (Date.now() - entry.ts > CACHE_TTL) { cache.delete(key); return null; }
-  return entry.data;
-}
+// ── HMAC 인증 ──
 
-function setCache(key: string, data: ProductItem[]) {
-  cache.set(key, { data, ts: Date.now() });
-  if (cache.size > 200) {
-    const oldest = cache.keys().next().value;
-    if (oldest !== undefined) cache.delete(oldest);
-  }
-}
-
-// ── 쿠팡파트너스 HMAC 인증 ──
-
-function generateHmac(method: string, urlPath: string): string {
+function generateHmac(method: string, path: string, query: string): string {
   const accessKey = process.env.COUPANG_ACCESS_KEY ?? '';
   const secretKey = process.env.COUPANG_SECRET_KEY ?? '';
 
   const now = new Date();
   const pad = (n: number) => String(n).padStart(2, '0');
-  const datetime = `${String(now.getUTCFullYear()).slice(2)}${pad(now.getUTCMonth() + 1)}${pad(now.getUTCDate())}T${pad(now.getUTCHours())}${pad(now.getUTCMinutes())}${pad(now.getUTCSeconds())}Z`;
+  const datetime = `${String(now.getUTCFullYear()).slice(2)}${pad(
+    now.getUTCMonth() + 1
+  )}${pad(now.getUTCDate())}T${pad(now.getUTCHours())}${pad(
+    now.getUTCMinutes()
+  )}${pad(now.getUTCSeconds())}Z`;
 
-  const message = `${datetime}${method}${urlPath}`;
+  // 메시지: datetime + method + path + query  (path와 query 사이에 '?' 없음)
+  const message = `${datetime}${method}${path}${query}`;
   const signature = crypto
     .createHmac('sha256', secretKey)
     .update(message)
@@ -65,70 +57,141 @@ function generateHmac(method: string, urlPath: string): string {
   return `CEA algorithm=HmacSHA256, access-key=${accessKey}, signed-date=${datetime}, signature=${signature}`;
 }
 
-async function searchCoupang(keyword: string, limit = 4): Promise<ProductItem[]> {
+/**
+ * 쿠팡 URL 배열 → 딥링크(제휴 추적 URL) 변환
+ * POST /v2/providers/affiliate_open_api/apis/openapi/v1/deeplink
+ */
+async function convertToDeeplinks(
+  urls: string[]
+): Promise<Map<string, string>> {
+  const result = new Map<string, string>();
   const accessKey = process.env.COUPANG_ACCESS_KEY;
   const secretKey = process.env.COUPANG_SECRET_KEY;
-  if (!accessKey || !secretKey) return [];
+
+  if (!accessKey || !secretKey) return result;
+
+  // 캐시된 것 먼저 채우고, 변환 필요한 것만 추림
+  const toConvert: string[] = [];
+  const now = Date.now();
+
+  for (const url of urls) {
+    const cached = deeplinkCache.get(url);
+    if (cached && now - cached.ts < CACHE_TTL) {
+      result.set(url, cached.url);
+    } else {
+      toConvert.push(url);
+    }
+  }
+
+  if (toConvert.length === 0) return result;
 
   try {
     const subId = process.env.COUPANG_SUB_ID ?? 'unse';
-    const path = `/v2/providers/affiliate_open_api/apis/openapi/products/search?keyword=${encodeURIComponent(keyword)}&limit=${limit}&subId=${subId}`;
-    const authorization = generateHmac('GET', path);
+    const apiPath = '/v2/providers/affiliate_open_api/apis/openapi/v1/deeplink';
+    const authorization = generateHmac('POST', apiPath, '');
 
-    const res = await fetch(`https://api-gateway.coupang.com${path}`, {
-      method: 'GET',
+    const body = JSON.stringify({
+      coupangUrls: toConvert,
+      subId,
+    });
+
+    const res = await fetch(`https://api-gateway.coupang.com${apiPath}`, {
+      method: 'POST',
       headers: {
-        'Authorization': authorization,
+        Authorization: authorization,
         'Content-Type': 'application/json;charset=UTF-8',
       },
+      body,
     });
 
     if (!res.ok) {
-      console.error(`[쿠팡] ${res.status} ${res.statusText}`);
-      return [];
+      console.error(`[쿠팡 딥링크] ${res.status} ${res.statusText}`);
+      return result;
     }
 
     const json = await res.json();
 
     if (json.rCode !== '0' && json.rCode !== 0) {
-      console.error(`[쿠팡] rCode=${json.rCode}, rMessage=${json.rMessage}`);
-      return [];
+      console.error(
+        `[쿠팡 딥링크] rCode=${json.rCode}, rMessage=${json.rMessage}`
+      );
+      return result;
     }
 
-    return (json.data?.productData ?? []).map((p: Record<string, unknown>) => ({
-      id: `cpg_${p.productId}`,
-      title: String(p.productName ?? ''),
-      price: Number(p.productPrice ?? 0).toLocaleString('ko-KR') + '원',
-      image: String(p.productImage ?? ''),
-      link: String(p.productUrl ?? ''),
-      source: 'coupang' as const,
-      category: String(p.categoryName ?? ''),
-    }));
+    const data: { originalUrl: string; shortenUrl: string }[] =
+      json.data ?? [];
+
+    for (const item of data) {
+      if (item.shortenUrl) {
+        result.set(item.originalUrl, item.shortenUrl);
+        deeplinkCache.set(item.originalUrl, {
+          url: item.shortenUrl,
+          ts: Date.now(),
+        });
+      }
+    }
   } catch (err) {
-    console.error('[쿠팡] 에러:', err);
-    return [];
+    console.error('[쿠팡 딥링크] 에러:', err);
   }
+
+  return result;
+}
+
+function poolItemToProduct(
+  item: PoolItem,
+  affiliateLink: string | undefined
+): ProductItem {
+  return {
+    id: item.id,
+    title: item.title,
+    emoji: item.emoji,
+    keyword: item.keyword,
+    link: affiliateLink ?? coupangSearchUrl(item.keyword),
+    isAffiliate: !!affiliateLink,
+    source: 'coupang',
+  };
 }
 
 // ── 핸들러 ──
 
+export async function POST(req: NextRequest) {
+  try {
+    const ctx: FortuneContext = await req.json();
+
+    // 1. 상품 풀에서 선택
+    const items = pickItems(ctx, 4);
+
+    // 2. 쿠팡 검색 URL 생성
+    const searchUrls = items.map((it) => coupangSearchUrl(it.keyword));
+
+    // 3. 딥링크 변환 시도
+    const deeplinks = await convertToDeeplinks(searchUrls);
+
+    // 4. 결과 조합
+    const products: ProductItem[] = items.map((item, i) => {
+      const originalUrl = searchUrls[i];
+      const affiliateUrl = deeplinks.get(originalUrl);
+      return poolItemToProduct(item, affiliateUrl);
+    });
+
+    return NextResponse.json({ products });
+  } catch (err) {
+    console.error('[products] 에러:', err);
+    return NextResponse.json({ products: [], error: 'internal' }, { status: 500 });
+  }
+}
+
+// GET도 지원 (하위 호환)
 export async function GET(req: NextRequest) {
-  const { searchParams } = req.nextUrl;
-  const keyword = searchParams.get('keyword')?.trim();
-  const limitParam = Math.min(Number(searchParams.get('limit') ?? 4), 10);
+  const ctx: FortuneContext = { type: 'lucky' };
+  const items = pickItems(ctx, 4);
+  const searchUrls = items.map((it) => coupangSearchUrl(it.keyword));
+  const deeplinks = await convertToDeeplinks(searchUrls);
 
-  if (!keyword) {
-    return NextResponse.json({ error: 'keyword 파라미터가 필요합니다' }, { status: 400 });
-  }
+  const products: ProductItem[] = items.map((item, i) => {
+    const originalUrl = searchUrls[i];
+    return poolItemToProduct(item, deeplinks.get(originalUrl));
+  });
 
-  const cacheKey = `${keyword}:${limitParam}`;
-  const cached = getCached(cacheKey);
-  if (cached) {
-    return NextResponse.json({ products: cached, keyword, cached: true } satisfies ProductResponse);
-  }
-
-  const products = await searchCoupang(keyword, limitParam);
-  setCache(cacheKey, products);
-
-  return NextResponse.json({ products, keyword, cached: false } satisfies ProductResponse);
+  return NextResponse.json({ products });
 }
