@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { MAJOR_ARCANA } from '@/lib/fortune-data';
+import ProductAdBanner from '@/components/ads/ProductAdBanner';
 
 type DrawnCard = {
   id: number;
@@ -225,21 +226,13 @@ export default function TarotPage() {
 
             {showResult && (
               <>
-                {/* 행운 아이템 추천 */}
-                <div className="promo-banner" style={{ marginTop: '1.5rem', maxWidth: '36rem', width: '100%' }}>
-                  <div className="promo-banner__icon">{'\uD83C\uDCCF'}</div>
-                  <div className="promo-banner__title">{'타로 카드가 추천하는 행운 아이템'}</div>
-                  <div className="promo-banner__desc">{'오늘의 타로 에너지를 일상에서도 느껴보세요'}</div>
-                  <div className="promo-banner__buttons">
-                    <a href="https://s.click.aliexpress.com/e/_olzd8TL" target="_blank" rel="sponsored nofollow noopener noreferrer" className="promo-banner__btn promo-banner__btn--primary">
-                      {'\uD83D\uDECD\uFE0F 행운 아이템 보기'}
-                    </a>
-                    <a href="https://www.trip.com/t/Ik6QQwDcjT2" target="_blank" rel="sponsored nofollow noopener noreferrer" className="promo-banner__btn promo-banner__btn--secondary">
-                      {'\u2708\uFE0F 여행으로 에너지 충전'}
-                    </a>
-                  </div>
-                  <div className="promo-banner__note">{'제휴 링크를 통해 구매 시 운세미 운영에 도움이 됩니다'}</div>
-                </div>
+                {/* 행운 아이템 상품 추천 */}
+                <ProductAdBanner
+                  context={{ type: 'tarot', tarotCardName: selectedCards[0]?.nameKo }}
+                  icon="🃏"
+                  title="타로 카드가 추천하는 행운 아이템"
+                  desc="오늘의 타로 에너지를 일상에서도 느껴보세요"
+                />
 
                 <button className="submit-btn" onClick={shuffleDeck} style={{ marginTop: '1rem' }}>
                   {'\uD83D\uDD04 다시 뽑기'}

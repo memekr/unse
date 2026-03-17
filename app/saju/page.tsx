@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { calculateSaju, FIVE_ELEMENTS_KO, FIVE_ELEMENTS_NAME, FIVE_ELEMENTS_COLOR } from '@/lib/saju-engine';
+import ProductAdBanner from '@/components/ads/ProductAdBanner';
 import type { SajuResult } from '@/lib/saju-engine';
 
 const BIRTH_TIMES = [
@@ -263,21 +264,13 @@ export default function SajuPage() {
             </div>
           </div>
 
-          {/* 사주 결과 하단 광고 */}
-          <div className="promo-banner" style={{ marginTop: '1.5rem' }}>
-            <div className="promo-banner__icon">{'\uD83C\uDFB4'}</div>
-            <div className="promo-banner__title">{'사주에 맞는 행운 아이템'}</div>
-            <div className="promo-banner__desc">{'오행의 균형을 맞춰주는 아이템과 기운을 충전할 여행지를 찾아보세요'}</div>
-            <div className="promo-banner__buttons">
-              <a href="https://s.click.aliexpress.com/e/_olzd8TL" target="_blank" rel="sponsored nofollow noopener noreferrer" className="promo-banner__btn promo-banner__btn--primary">
-                {'\uD83D\uDECD\uFE0F 오행 밸런스 아이템'}
-              </a>
-              <a href="https://www.trip.com/t/Ik6QQwDcjT2" target="_blank" rel="sponsored nofollow noopener noreferrer" className="promo-banner__btn promo-banner__btn--secondary">
-                {'\u2708\uFE0F 기운 충전 여행'}
-              </a>
-            </div>
-            <div className="promo-banner__note">{'제휴 링크를 통해 구매 시 운세미 운영에 도움이 됩니다'}</div>
-          </div>
+          {/* 사주 결과 하단 상품 추천 */}
+          <ProductAdBanner
+            context={{ type: 'saju', dominantElement: result.dominantElement, weakElement: result.weakElement }}
+            icon="🎴"
+            title="사주에 맞는 행운 아이템"
+            desc="오행의 균형을 맞춰주는 아이템을 찾아보세요"
+          />
         </>
       )}
     </div>

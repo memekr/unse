@@ -3,6 +3,7 @@ import { buildMetadata } from '@/components/SEOHead';
 import { siteConfig } from '@/lib/site-config';
 import { resolveSharedAd } from '@/lib/ads/shared-feed';
 import SharedAdBanner from '@/components/ads/SharedAdBanner';
+import ProductAdBanner from '@/components/ads/ProductAdBanner';
 import {
   ZODIAC_SIGNS, FORTUNE_MESSAGES, OVERALL_FORTUNES,
   LOVE_FORTUNES, MONEY_FORTUNES, HEALTH_FORTUNES,
@@ -151,20 +152,12 @@ export default async function HoroscopePage() {
       </div>
 
       {/* 행운의 쇼핑 섹션 */}
-      <div className="promo-banner" style={{ marginTop: '2.5rem' }}>
-        <div className="promo-banner__icon">{'\u2728'}</div>
-        <div className="promo-banner__title">{'별자리에 맞는 행운 아이템'}</div>
-        <div className="promo-banner__desc">{'오늘의 별자리 운세가 추천하는 행운 아이템과 여행지를 만나보세요'}</div>
-        <div className="promo-banner__buttons">
-          <a href="https://s.click.aliexpress.com/e/_olzd8TL" target="_blank" rel="sponsored nofollow noopener noreferrer" className="promo-banner__btn promo-banner__btn--primary">
-            {'\uD83D\uDECD\uFE0F 행운 아이템 보기'}
-          </a>
-          <a href="https://www.trip.com/t/Ik6QQwDcjT2" target="_blank" rel="sponsored nofollow noopener noreferrer" className="promo-banner__btn promo-banner__btn--secondary">
-            {'\u2708\uFE0F 행운의 여행지'}
-          </a>
-        </div>
-        <div className="promo-banner__note">{'제휴 링크를 통해 구매 시 운세미 운영에 도움이 됩니다'}</div>
-      </div>
+      <ProductAdBanner
+        context={{ type: 'horoscope' }}
+        icon="✨"
+        title="별자리에 맞는 행운 아이템"
+        desc="오늘의 별자리 운세가 추천하는 행운 아이템을 만나보세요"
+      />
 
       <div style={{ marginTop: '2rem' }}>
         <SharedAdBanner ad={inlineAd} variant="inline-card" />

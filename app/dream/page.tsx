@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import type { FormEvent } from 'react';
 import { DREAM_DATABASE, generateLottoNumbers } from '@/lib/dream-data';
+import ProductAdBanner from '@/components/ads/ProductAdBanner';
 import type { DreamEntry } from '@/lib/dream-data';
 
 const CATEGORIES = [
@@ -214,21 +215,13 @@ export default function DreamPage() {
         )}
       </div>
 
-      {/* 꿈해몽 하단 광고 */}
-      <div className="promo-banner" style={{ marginTop: '2rem' }}>
-        <div className="promo-banner__icon">{'\uD83D\uDCAD'}</div>
-        <div className="promo-banner__title">{'꿈이 알려준 메시지를 행동으로'}</div>
-        <div className="promo-banner__desc">{'꿈에서 받은 행운의 기운을 실제 생활로 가져오세요'}</div>
-        <div className="promo-banner__buttons">
-          <a href="https://s.click.aliexpress.com/e/_olzd8TL" target="_blank" rel="sponsored nofollow noopener noreferrer" className="promo-banner__btn promo-banner__btn--primary">
-            {'\uD83D\uDECD\uFE0F 꿈 속 행운 아이템'}
-          </a>
-          <a href="https://www.trip.com/t/Ik6QQwDcjT2" target="_blank" rel="sponsored nofollow noopener noreferrer" className="promo-banner__btn promo-banner__btn--secondary">
-            {'\u2708\uFE0F 꿈꾸던 여행 떠나기'}
-          </a>
-        </div>
-        <div className="promo-banner__note">{'제휴 링크를 통해 구매 시 운세미 운영에 도움이 됩니다'}</div>
-      </div>
+      {/* 꿈해몽 하단 상품 추천 */}
+      <ProductAdBanner
+        context={{ type: 'horoscope' }}
+        icon="💭"
+        title="꿈이 알려준 메시지를 행동으로"
+        desc="꿈에서 받은 행운의 기운을 실제 생활로 가져오세요"
+      />
     </div>
   );
 }
