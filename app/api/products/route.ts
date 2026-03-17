@@ -2,11 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 
 /* ─────────────────────────────────────────
- * 상품 검색 API — 쿠팡파트너스 & 네이버 쇼핑
+ * 상품 검색 API
  *
- * GET /api/products?keyword=행운+팔찌&source=coupang
- * GET /api/products?keyword=행운+팔찌&source=naver
- * GET /api/products?keyword=행운+팔찌  (둘 다 시도, fallback)
+ * 쿠팡파트너스: API로 실시간 상품 검색 (시간당 10회 제한)
+ * 네이버 쇼핑커넥트: 수동 등록 링크 (공개 API 없음)
+ *
+ * GET /api/products?keyword=행운+팔찌&limit=4
  * ───────────────────────────────────────── */
 
 // ── 타입 ──
@@ -25,14 +26,13 @@ export type ProductItem = {
 type ProductResponse = {
   products: ProductItem[];
   keyword: string;
-  source: string;
   cached: boolean;
 };
 
-// ── 메모리 캐시 (5분) ──
+// ── 메모리 캐시 (1시간 — 쿠팡 API 시간당 10회 제한 대응) ──
 
 const cache = new Map<string, { data: ProductItem[]; ts: number }>();
-const CACHE_TTL = 5 * 60 * 1000;
+const CACHE_TTL = 60 * 60 * 1000; // 1시간
 
 function getCached(key: string): ProductItem[] | null {
   const entry = cache.get(key);
@@ -43,102 +43,141 @@ function getCached(key: string): ProductItem[] | null {
 
 function setCache(key: string, data: ProductItem[]) {
   cache.set(key, { data, ts: Date.now() });
-  // 캐시 크기 제한 (최대 200개)
   if (cache.size > 200) {
     const oldest = cache.keys().next().value;
     if (oldest !== undefined) cache.delete(oldest);
   }
 }
 
-// ── 쿠팡파트너스 API ──
+// ── 쿠팡파트너스 HMAC 인증 (공식 스펙) ──
+// Authorization: CEA algorithm=HmacSHA256, access-key=..., signed-date=..., signature=...
+// message = datetime + method + path(쿼리스트링 포함)
 
-function generateCoupangHmac(method: string, path: string, datetime: string): string {
+function generateCoupangHmac(method: string, urlPath: string): string {
   const accessKey = process.env.COUPANG_ACCESS_KEY ?? '';
   const secretKey = process.env.COUPANG_SECRET_KEY ?? '';
 
-  const message = `${datetime}${method}${path}`;
-  const hmac = crypto.createHmac('sha256', secretKey);
-  hmac.update(message);
-  return `CEA algorithm=HmacSHA256, access-key=${accessKey}, signed-date=${datetime}, signature=${hmac.digest('hex')}`;
+  // 쿠팡 공식 datetime 형식: yyMMddTHHmmssZ
+  const now = new Date();
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const datetime = `${String(now.getUTCFullYear()).slice(2)}${pad(now.getUTCMonth() + 1)}${pad(now.getUTCDate())}T${pad(now.getUTCHours())}${pad(now.getUTCMinutes())}${pad(now.getUTCSeconds())}Z`;
+
+  const message = `${datetime}${method}${urlPath}`;
+  const signature = crypto
+    .createHmac('sha256', secretKey)
+    .update(message)
+    .digest('hex');
+
+  return `CEA algorithm=HmacSHA256, access-key=${accessKey}, signed-date=${datetime}, signature=${signature}`;
 }
 
-async function searchCoupang(keyword: string, limit = 5): Promise<ProductItem[]> {
+async function searchCoupang(keyword: string, limit = 4): Promise<ProductItem[]> {
   const accessKey = process.env.COUPANG_ACCESS_KEY;
   const secretKey = process.env.COUPANG_SECRET_KEY;
   if (!accessKey || !secretKey) return [];
 
   try {
-    const datetime = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 14) + 'Z';
     const subId = process.env.COUPANG_SUB_ID ?? 'unse';
     const path = `/v2/providers/affiliate_open_api/apis/openapi/products/search?keyword=${encodeURIComponent(keyword)}&limit=${limit}&subId=${subId}`;
-    const authorization = generateCoupangHmac('GET', path, datetime);
+    const authorization = generateCoupangHmac('GET', path);
 
     const res = await fetch(`https://api-gateway.coupang.com${path}`, {
-      headers: { 'Authorization': authorization },
-      next: { revalidate: 300 },
+      method: 'GET',
+      headers: {
+        'Authorization': authorization,
+        'Content-Type': 'application/json;charset=UTF-8',
+      },
     });
 
-    if (!res.ok) return [];
+    if (!res.ok) {
+      console.error(`[쿠팡 API] ${res.status} ${res.statusText}`);
+      return [];
+    }
+
     const json = await res.json();
+
+    // 쿠팡 응답: { rCode: "0", rMessage: "", data: { productData: [...] } }
+    if (json.rCode !== '0' && json.rCode !== 0) {
+      console.error(`[쿠팡 API] rCode=${json.rCode}, rMessage=${json.rMessage}`);
+      return [];
+    }
 
     const items: ProductItem[] = (json.data?.productData ?? []).map((p: Record<string, unknown>) => ({
       id: `cpg_${p.productId}`,
       title: String(p.productName ?? ''),
       price: Number(p.productPrice ?? 0).toLocaleString('ko-KR') + '원',
       image: String(p.productImage ?? ''),
-      link: String(p.productUrl ?? ''),
+      link: String(p.productUrl ?? ''),  // 이미 제휴 트래킹 URL
       source: 'coupang' as const,
       category: String(p.categoryName ?? ''),
       rating: Number(p.productRating ?? 0),
     }));
 
     return items;
-  } catch {
+  } catch (err) {
+    console.error('[쿠팡 API] 에러:', err);
     return [];
   }
 }
 
-// ── 네이버 쇼핑 API ──
+// ── 네이버 쇼핑커넥트 수동 링크 관리 ──
+// 브랜드커넥트에서 발급받은 제휴 링크를 카테고리별로 등록
+// 공개 API가 없어 수동 관리 필요
 
-async function searchNaver(keyword: string, limit = 5): Promise<ProductItem[]> {
-  const clientId = process.env.NAVER_CLIENT_ID;
-  const clientSecret = process.env.NAVER_CLIENT_SECRET;
-  if (!clientId || !clientSecret) return [];
+type NaverManualProduct = {
+  id: string;
+  title: string;
+  price: string;
+  image: string;
+  link: string;
+  category: string;
+  keywords: string[];  // 매칭용 키워드
+};
 
-  try {
-    const res = await fetch(
-      `https://openapi.naver.com/v1/search/shop.json?query=${encodeURIComponent(keyword)}&display=${limit}&sort=sim`,
-      {
-        headers: {
-          'X-Naver-Client-Id': clientId,
-          'X-Naver-Client-Secret': clientSecret,
-        },
-        next: { revalidate: 300 },
-      }
-    );
+// 여기에 브랜드커넥트에서 발급받은 상품 링크를 등록하세요
+// link는 브랜드커넥트 대시보드에서 복사한 제휴 URL
+const NAVER_MANUAL_PRODUCTS: NaverManualProduct[] = [
+  // 예시 (실제 링크로 교체 필요):
+  // {
+  //   id: 'nvr_1',
+  //   title: '천연 자수정 팔찌 행운 액세서리',
+  //   price: '15,900원',
+  //   image: 'https://shop-phinf.pstatic.net/...jpg',
+  //   link: 'https://smartstore.naver.com/...?n_media=...',
+  //   category: '액세서리',
+  //   keywords: ['자수정', '팔찌', '보라', '힐링', '행운'],
+  // },
+];
 
-    if (!res.ok) return [];
-    const json = await res.json();
+function searchNaverManual(keyword: string, limit = 4): ProductItem[] {
+  if (NAVER_MANUAL_PRODUCTS.length === 0) return [];
 
-    const items: ProductItem[] = (json.items ?? []).map((p: Record<string, unknown>, i: number) => {
-      // 네이버 쇼핑 결과에서 제휴 링크 생성
-      const link = String(p.link ?? '');
-      return {
-        id: `nvr_${i}_${Date.now()}`,
-        title: String(p.title ?? '').replace(/<\/?b>/g, ''),
-        price: Number(p.lprice ?? 0).toLocaleString('ko-KR') + '원',
-        image: String(p.image ?? ''),
-        link,
-        source: 'naver' as const,
-        category: String(p.category1 ?? ''),
-        rating: 0,
-      };
-    });
+  // 키워드 매칭 점수 계산
+  const keywordParts = keyword.split(/\s+/).filter(Boolean);
+  const scored = NAVER_MANUAL_PRODUCTS.map(p => {
+    let score = 0;
+    for (const part of keywordParts) {
+      if (p.title.includes(part)) score += 2;
+      if (p.keywords.some(k => k.includes(part) || part.includes(k))) score += 1;
+      if (p.category.includes(part)) score += 1;
+    }
+    return { ...p, score };
+  });
 
-    return items;
-  } catch {
-    return [];
-  }
+  return scored
+    .filter(p => p.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit)
+    .map(p => ({
+      id: p.id,
+      title: p.title,
+      price: p.price,
+      image: p.image,
+      link: p.link,
+      source: 'naver' as const,
+      category: p.category,
+      rating: 0,
+    }));
 }
 
 // ── 핸들러 ──
@@ -146,42 +185,36 @@ async function searchNaver(keyword: string, limit = 5): Promise<ProductItem[]> {
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
   const keyword = searchParams.get('keyword')?.trim();
-  const source = searchParams.get('source') ?? 'all';
   const limitParam = Math.min(Number(searchParams.get('limit') ?? 4), 10);
 
   if (!keyword) {
     return NextResponse.json({ error: 'keyword 파라미터가 필요합니다' }, { status: 400 });
   }
 
-  const cacheKey = `${source}:${keyword}:${limitParam}`;
+  const cacheKey = `${keyword}:${limitParam}`;
   const cached = getCached(cacheKey);
   if (cached) {
     return NextResponse.json({
       products: cached,
       keyword,
-      source,
       cached: true,
     } satisfies ProductResponse);
   }
 
-  let products: ProductItem[] = [];
+  // 1) 쿠팡에서 검색
+  let products = await searchCoupang(keyword, limitParam);
 
-  if (source === 'coupang' || source === 'all') {
-    products = await searchCoupang(keyword, limitParam);
-  }
-
-  if ((source === 'naver' || source === 'all') && products.length < limitParam) {
-    const naverProducts = await searchNaver(keyword, limitParam - products.length);
+  // 2) 부족하면 네이버 수동 링크에서 보충
+  if (products.length < limitParam) {
+    const naverProducts = searchNaverManual(keyword, limitParam - products.length);
     products = [...products, ...naverProducts];
   }
 
-  // 결과가 아예 없으면 빈 배열 반환 (프론트에서 기존 배너로 폴백)
   setCache(cacheKey, products);
 
   return NextResponse.json({
     products,
     keyword,
-    source,
     cached: false,
   } satisfies ProductResponse);
 }
