@@ -102,7 +102,7 @@ export default async function HoroscopePage() {
       </div>
 
       <div className="horoscope-grid">
-        {fortunes.map((zodiac) => (
+        {fortunes.map((zodiac, idx) => (
           <article key={zodiac.slug} className="horoscope-card" id={zodiac.slug}>
             <div className="horoscope-card-header">
               <span className="icon">{zodiac.icon}</span>
@@ -151,37 +151,20 @@ export default async function HoroscopePage() {
       </div>
 
       {/* 행운의 쇼핑 섹션 */}
-      <section style={{ marginTop: '2.5rem', padding: '1.5rem', borderRadius: '1rem', background: 'linear-gradient(135deg, rgba(139,92,246,0.08), rgba(251,191,36,0.08))', border: '1px solid var(--color-border)' }}>
-        <h2 style={{ fontSize: '1.125rem', fontWeight: 700, marginBottom: '0.5rem', textAlign: 'center' }}>
-          {'\u2728 행운의 쇼핑'}
-        </h2>
-        <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-dim)', textAlign: 'center', marginBottom: '1rem' }}>
-          {'오늘의 행운을 더 높이는 행운 아이템을 찾아보세요'}
-        </p>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', justifyContent: 'center' }}>
-          <a
-            href="https://s.click.aliexpress.com/e/_olzd8TL"
-            target="_blank"
-            rel="sponsored nofollow noopener noreferrer"
-            className="button primary"
-            style={{ fontSize: '0.875rem' }}
-          >
-            {'\uD83D\uDECD\uFE0F 행운의 아이템 보기'}
+      <div className="promo-banner" style={{ marginTop: '2.5rem' }}>
+        <div className="promo-banner__icon">{'\u2728'}</div>
+        <div className="promo-banner__title">{'별자리에 맞는 행운 아이템'}</div>
+        <div className="promo-banner__desc">{'오늘의 별자리 운세가 추천하는 행운 아이템과 여행지를 만나보세요'}</div>
+        <div className="promo-banner__buttons">
+          <a href="https://s.click.aliexpress.com/e/_olzd8TL" target="_blank" rel="sponsored nofollow noopener noreferrer" className="promo-banner__btn promo-banner__btn--primary">
+            {'\uD83D\uDECD\uFE0F 행운 아이템 보기'}
           </a>
-          <a
-            href="https://www.trip.com/t/Ik6QQwDcjT2"
-            target="_blank"
-            rel="sponsored nofollow noopener noreferrer"
-            className="button secondary"
-            style={{ fontSize: '0.875rem' }}
-          >
+          <a href="https://www.trip.com/t/Ik6QQwDcjT2" target="_blank" rel="sponsored nofollow noopener noreferrer" className="promo-banner__btn promo-banner__btn--secondary">
             {'\u2708\uFE0F 행운의 여행지'}
           </a>
         </div>
-        <p style={{ fontSize: '0.6875rem', color: 'var(--color-text-dim)', textAlign: 'center', marginTop: '0.75rem' }}>
-          {'제휴 링크를 통해 구매 시 운세미 운영에 도움이 됩니다'}
-        </p>
-      </section>
+        <div className="promo-banner__note">{'제휴 링크를 통해 구매 시 운세미 운영에 도움이 됩니다'}</div>
+      </div>
 
       <div style={{ marginTop: '2rem' }}>
         <SharedAdBanner ad={inlineAd} variant="inline-card" />

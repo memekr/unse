@@ -591,19 +591,25 @@ export default function HomePage() {
           ))}
         </section>
 
-        {/* 광고 */}
-        <section style={{ padding: '1rem', borderRadius: 'var(--radius-sm)', background: 'linear-gradient(135deg, rgba(139,92,246,0.06), rgba(251,191,36,0.06))', border: '1px solid var(--color-border)', textAlign: 'center', marginBottom: '1rem' }}>
-          <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-dim)', marginBottom: '0.5rem' }}>{'오늘의 행운을 더 높이는 방법'}</p>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', justifyContent: 'center' }}>
-            <a href="https://s.click.aliexpress.com/e/_olzd8TL" target="_blank" rel="sponsored nofollow noopener noreferrer" className="button primary" style={{ fontSize: '0.8125rem', padding: '0.5rem 1rem' }}>
-              {'\uD83D\uDECD\uFE0F 행운 아이템'}
+        {/* 운세 맞춤 추천 */}
+        <div className="promo-banner" style={{ marginBottom: '1rem' }}>
+          <div className="promo-banner__icon">{r.fortune.overall >= 4 ? '\uD83C\uDF1F' : r.fortune.overall >= 3 ? '\uD83D\uDD2E' : '\uD83C\uDF40'}</div>
+          <div className="promo-banner__title">
+            {r.fortune.overall >= 4 ? '좋은 기운을 더 높이세요' : r.fortune.overall >= 3 ? '행운의 아이템으로 운기 상승' : '오늘의 운을 바꿔보세요'}
+          </div>
+          <div className="promo-banner__desc">
+            {r.zodiac.name}{' '}{r.fortune.luckyColor}{' 컬러 아이템이 행운을 가져다줍니다'}
+          </div>
+          <div className="promo-banner__buttons">
+            <a href="https://s.click.aliexpress.com/e/_olzd8TL" target="_blank" rel="sponsored nofollow noopener noreferrer" className="promo-banner__btn promo-banner__btn--primary">
+              {'\uD83D\uDECD\uFE0F '}{r.fortune.luckyColor}{' 아이템 찾기'}
             </a>
-            <a href="https://www.trip.com/t/Ik6QQwDcjT2" target="_blank" rel="sponsored nofollow noopener noreferrer" className="button secondary" style={{ fontSize: '0.8125rem', padding: '0.5rem 1rem' }}>
+            <a href="https://www.trip.com/t/Ik6QQwDcjT2" target="_blank" rel="sponsored nofollow noopener noreferrer" className="promo-banner__btn promo-banner__btn--secondary">
               {'\u2708\uFE0F 행운의 여행지'}
             </a>
           </div>
-          <p style={{ fontSize: '0.625rem', color: 'var(--color-text-dim)', marginTop: '0.375rem' }}>{'제휴 링크입니다'}</p>
-        </section>
+          <div className="promo-banner__note">{'제휴 링크를 통해 구매 시 운세미 운영에 도움이 됩니다'}</div>
+        </div>
 
         {backBtn}
       </div>
@@ -855,6 +861,26 @@ export default function HomePage() {
           </p>
         </div>
 
+        {/* 사주 맞춤 추천 */}
+        <div className="promo-banner" style={{ marginBottom: '1rem' }}>
+          <div className="promo-banner__icon">{'\uD83C\uDFB4'}</div>
+          <div className="promo-banner__title">
+            {FIVE_ELEMENTS_NAME[r.saju.dominantElement]}{'의 기운을 보완하세요'}
+          </div>
+          <div className="promo-banner__desc">
+            {'사주 분석 결과, '}{FIVE_ELEMENTS_NAME[r.saju.weakElement]}{' 기운 보충이 필요합니다. 맞춤 아이템으로 균형을 찾아보세요.'}
+          </div>
+          <div className="promo-banner__buttons">
+            <a href="https://s.click.aliexpress.com/e/_olzd8TL" target="_blank" rel="sponsored nofollow noopener noreferrer" className="promo-banner__btn promo-banner__btn--primary">
+              {'\uD83D\uDECD\uFE0F 오행 밸런스 아이템'}
+            </a>
+            <a href="https://www.trip.com/t/Ik6QQwDcjT2" target="_blank" rel="sponsored nofollow noopener noreferrer" className="promo-banner__btn promo-banner__btn--secondary">
+              {'\u2708\uFE0F '}{r.advSaju.yongshin.direction}{' 방위 여행'}
+            </a>
+          </div>
+          <div className="promo-banner__note">{'제휴 링크를 통해 구매 시 운세미 운영에 도움이 됩니다'}</div>
+        </div>
+
         {backBtn}
       </div>
     );
@@ -1015,6 +1041,23 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* 타로 맞춤 추천 */}
+        <div className="promo-banner" style={{ marginBottom: '1rem' }}>
+          <div className="promo-banner__icon">{r.tarot.card.emoji}</div>
+          <div className="promo-banner__title">
+            {r.tarot.card.nameKo}{'의 에너지를 일상에 담아보세요'}
+          </div>
+          <div className="promo-banner__desc">
+            {'오늘의 타로가 알려주는 행운 아이템을 만나보세요'}
+          </div>
+          <div className="promo-banner__buttons">
+            <a href="https://s.click.aliexpress.com/e/_olzd8TL" target="_blank" rel="sponsored nofollow noopener noreferrer" className="promo-banner__btn promo-banner__btn--primary">
+              {'\uD83D\uDECD\uFE0F 행운 아이템 보기'}
+            </a>
+          </div>
+          <div className="promo-banner__note">{'제휴 링크를 통해 구매 시 운세미 운영에 도움이 됩니다'}</div>
+        </div>
+
         {backBtn}
       </div>
     );
@@ -1086,19 +1129,23 @@ export default function HomePage() {
           </p>
         </section>
 
-        {/* 광고 */}
-        <section style={{ padding: '1rem', borderRadius: 'var(--radius-sm)', background: 'linear-gradient(135deg, rgba(139,92,246,0.06), rgba(251,191,36,0.06))', border: '1px solid var(--color-border)', textAlign: 'center', marginBottom: '1rem' }}>
-          <p style={{ fontSize: '0.8125rem', fontWeight: 600, marginBottom: '0.5rem' }}>{'\uD83C\uDF1F 행운을 높이는 아이템'}</p>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', justifyContent: 'center' }}>
-            <a href="https://s.click.aliexpress.com/e/_olzd8TL" target="_blank" rel="sponsored nofollow noopener noreferrer" className="button primary" style={{ fontSize: '0.8125rem', padding: '0.5rem 1rem' }}>
-              {'\uD83D\uDECD\uFE0F 행운 아이템'}
+        {/* 행운 부스터 */}
+        <div className="promo-banner" style={{ marginBottom: '1rem' }}>
+          <div className="promo-banner__icon">{'\uD83C\uDF40'}</div>
+          <div className="promo-banner__title">{'행운의 번호, 행운의 아이템과 함께'}</div>
+          <div className="promo-banner__desc">
+            {r.fortune.luckyColor}{' 컬러 아이템과 함께하면 행운이 배가됩니다'}
+          </div>
+          <div className="promo-banner__buttons">
+            <a href="https://s.click.aliexpress.com/e/_olzd8TL" target="_blank" rel="sponsored nofollow noopener noreferrer" className="promo-banner__btn promo-banner__btn--primary">
+              {'\uD83D\uDECD\uFE0F 행운 아이템 쇼핑'}
             </a>
-            <a href="https://www.trip.com/t/Ik6QQwDcjT2" target="_blank" rel="sponsored nofollow noopener noreferrer" className="button secondary" style={{ fontSize: '0.8125rem', padding: '0.5rem 1rem' }}>
-              {'\u2708\uFE0F 행운의 여행지'}
+            <a href="https://www.trip.com/t/Ik6QQwDcjT2" target="_blank" rel="sponsored nofollow noopener noreferrer" className="promo-banner__btn promo-banner__btn--secondary">
+              {'\u2708\uFE0F 행운의 여행'}
             </a>
           </div>
-          <p style={{ fontSize: '0.625rem', color: 'var(--color-text-dim)', marginTop: '0.375rem' }}>{'제휴 링크입니다'}</p>
-        </section>
+          <div className="promo-banner__note">{'제휴 링크를 통해 구매 시 운세미 운영에 도움이 됩니다'}</div>
+        </div>
 
         {backBtn}
       </div>

@@ -215,37 +215,20 @@ export default function DreamPage() {
       </div>
 
       {/* 꿈해몽 하단 광고 */}
-      <section style={{ marginTop: '2rem', padding: '1.25rem', borderRadius: '1rem', background: 'linear-gradient(135deg, rgba(139,92,246,0.08), rgba(251,191,36,0.08))', border: '1px solid var(--color-border)' }}>
-        <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.5rem', textAlign: 'center' }}>
-          {'\uD83C\uDF1F 꿈에서 받은 메시지를 행동으로'}
-        </h3>
-        <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-dim)', textAlign: 'center', marginBottom: '0.75rem' }}>
-          {'꿈이 알려준 행운을 직접 찾아보세요'}
-        </p>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', justifyContent: 'center' }}>
-          <a
-            href="https://s.click.aliexpress.com/e/_olzd8TL"
-            target="_blank"
-            rel="sponsored nofollow noopener noreferrer"
-            className="button primary"
-            style={{ fontSize: '0.875rem' }}
-          >
-            {'\uD83D\uDECD\uFE0F 행운 아이템 찾기'}
+      <div className="promo-banner" style={{ marginTop: '2rem' }}>
+        <div className="promo-banner__icon">{'\uD83D\uDCAD'}</div>
+        <div className="promo-banner__title">{'꿈이 알려준 메시지를 행동으로'}</div>
+        <div className="promo-banner__desc">{'꿈에서 받은 행운의 기운을 실제 생활로 가져오세요'}</div>
+        <div className="promo-banner__buttons">
+          <a href="https://s.click.aliexpress.com/e/_olzd8TL" target="_blank" rel="sponsored nofollow noopener noreferrer" className="promo-banner__btn promo-banner__btn--primary">
+            {'\uD83D\uDECD\uFE0F 꿈 속 행운 아이템'}
           </a>
-          <a
-            href="https://www.trip.com/t/Ik6QQwDcjT2"
-            target="_blank"
-            rel="sponsored nofollow noopener noreferrer"
-            className="button secondary"
-            style={{ fontSize: '0.875rem' }}
-          >
-            {'\u2708\uFE0F 행운의 여행'}
+          <a href="https://www.trip.com/t/Ik6QQwDcjT2" target="_blank" rel="sponsored nofollow noopener noreferrer" className="promo-banner__btn promo-banner__btn--secondary">
+            {'\u2708\uFE0F 꿈꾸던 여행 떠나기'}
           </a>
         </div>
-        <p style={{ fontSize: '0.6875rem', color: 'var(--color-text-dim)', textAlign: 'center', marginTop: '0.5rem' }}>
-          {'제휴 링크를 통해 구매 시 운세미 운영에 도움이 됩니다'}
-        </p>
-      </section>
+        <div className="promo-banner__note">{'제휴 링크를 통해 구매 시 운세미 운영에 도움이 됩니다'}</div>
+      </div>
     </div>
   );
 }

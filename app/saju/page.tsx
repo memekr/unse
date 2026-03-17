@@ -264,37 +264,20 @@ export default function SajuPage() {
           </div>
 
           {/* 사주 결과 하단 광고 */}
-          <section style={{ marginTop: '1.5rem', padding: '1.25rem', borderRadius: '1rem', background: 'linear-gradient(135deg, rgba(139,92,246,0.08), rgba(251,191,36,0.08))', border: '1px solid var(--color-border)' }}>
-            <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.5rem', textAlign: 'center' }}>
-              {'\uD83C\uDF1F 오늘의 행운을 더 높이는 방법'}
-            </h3>
-            <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-dim)', textAlign: 'center', marginBottom: '0.75rem' }}>
-              {'사주에 맞는 행운 아이템과 여행지를 확인해보세요'}
-            </p>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', justifyContent: 'center' }}>
-              <a
-                href="https://s.click.aliexpress.com/e/_olzd8TL"
-                target="_blank"
-                rel="sponsored nofollow noopener noreferrer"
-                className="button primary"
-                style={{ fontSize: '0.875rem' }}
-              >
-                {'\uD83D\uDECD\uFE0F 행운 아이템'}
+          <div className="promo-banner" style={{ marginTop: '1.5rem' }}>
+            <div className="promo-banner__icon">{'\uD83C\uDFB4'}</div>
+            <div className="promo-banner__title">{'사주에 맞는 행운 아이템'}</div>
+            <div className="promo-banner__desc">{'오행의 균형을 맞춰주는 아이템과 기운을 충전할 여행지를 찾아보세요'}</div>
+            <div className="promo-banner__buttons">
+              <a href="https://s.click.aliexpress.com/e/_olzd8TL" target="_blank" rel="sponsored nofollow noopener noreferrer" className="promo-banner__btn promo-banner__btn--primary">
+                {'\uD83D\uDECD\uFE0F 오행 밸런스 아이템'}
               </a>
-              <a
-                href="https://www.trip.com/t/Ik6QQwDcjT2"
-                target="_blank"
-                rel="sponsored nofollow noopener noreferrer"
-                className="button secondary"
-                style={{ fontSize: '0.875rem' }}
-              >
-                {'\u2708\uFE0F 행운의 여행지'}
+              <a href="https://www.trip.com/t/Ik6QQwDcjT2" target="_blank" rel="sponsored nofollow noopener noreferrer" className="promo-banner__btn promo-banner__btn--secondary">
+                {'\u2708\uFE0F 기운 충전 여행'}
               </a>
             </div>
-            <p style={{ fontSize: '0.6875rem', color: 'var(--color-text-dim)', textAlign: 'center', marginTop: '0.5rem' }}>
-              {'제휴 링크를 통해 구매 시 운세미 운영에 도움이 됩니다'}
-            </p>
-          </section>
+            <div className="promo-banner__note">{'제휴 링크를 통해 구매 시 운세미 운영에 도움이 됩니다'}</div>
+          </div>
         </>
       )}
     </div>
