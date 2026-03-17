@@ -1,0 +1,149 @@
+import type { Metadata, Viewport } from 'next';
+import { siteConfig } from '@/lib/site-config';
+import SiteShell from '@/components/SiteShell';
+import GoogleAnalytics from '@/components/GoogleAnalytics';
+import { AuthProvider } from '@/components/AuthContext';
+import './globals.css';
+
+const siteUrl = 'https://unse.me';
+const siteName = '운세미';
+const siteTitle = '운세미 | 오늘의 운세 · 사주 · 타로 · 꿈해몽 · 별자리';
+const siteDescription = 'AI 기반 무료 운세 서비스. 띠별·별자리별 오늘의 운세, 사주풀이, 타로카드 해석, 꿈해몽을 정확하게 풀어드립니다.';
+
+export const viewport: Viewport = {
+  themeColor: '#0D0A1A',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  colorScheme: 'dark',
+};
+
+export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
+  title: siteTitle,
+  description: siteDescription,
+  applicationName: siteName,
+  keywords: [
+    '운세',
+    '오늘의운세',
+    '사주',
+    '타로',
+    '꿈해몽',
+    '별자리운세',
+    '띠별운세',
+    '무료운세',
+    'AI운세',
+    '궁합',
+    '운세미',
+  ],
+  authors: [{ name: '운세미', url: siteUrl }],
+  creator: '운세미',
+  publisher: '운세미',
+  manifest: '/manifest.json',
+  formatDetection: {
+    telephone: false,
+    email: false,
+    address: false,
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-snippet': -1,
+      'max-image-preview': 'large',
+      'max-video-preview': -1,
+    },
+  },
+  alternates: {
+    canonical: siteUrl,
+    languages: { 'ko-KR': siteUrl },
+  },
+  icons: {
+    icon: [
+      { url: '/favicon.ico' },
+      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+    ],
+    apple: [{ url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
+    shortcut: ['/favicon.ico'],
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: siteName,
+  },
+  openGraph: {
+    title: siteTitle,
+    description: siteDescription,
+    type: 'website',
+    locale: 'ko_KR',
+    url: siteUrl,
+    siteName,
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: siteTitle,
+        type: 'image/png',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: siteTitle,
+    description: siteDescription,
+    images: ['/og-image.png'],
+    creator: '@unse_me',
+  },
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_VERIFICATION ?? '',
+    other: {
+      ...(siteConfig.naverVerification
+        ? { 'naver-site-verification': siteConfig.naverVerification }
+        : {}),
+    },
+  },
+  other: {
+    'apple-mobile-web-app-capable': 'yes',
+    'apple-mobile-web-app-status-bar-style': 'black-translucent',
+    'mobile-web-app-capable': 'yes',
+  },
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
+  const websiteJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: siteName,
+    url: siteUrl,
+    description: siteDescription,
+  };
+
+  return (
+    <html lang="ko">
+      <head>
+        <meta name="theme-color" content="#0D0A1A" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+        />
+      </head>
+      <body>
+        <GoogleAnalytics />
+        <AuthProvider>
+        <SiteShell topBanner={`${siteName} - 무료 운세 서비스`}>
+          {children}
+        </SiteShell>
+        <p style={{ fontSize: '10px', color: '#9ca3af', opacity: 0.6, textAlign: 'center', padding: '8px 16px' }}>
+          본 사이트의 일부 링크는 제휴 마케팅 링크로, 이를 통한 구매 시 사이트 운영에 도움이 되는 소정의 수수료를 받을 수 있습니다.
+        </p>
+        </AuthProvider>
+      </body>
+    </html>
+  );
+}
