@@ -4,6 +4,7 @@
   "description": "AI 기반 무료 운세 서비스. 오늘의 운세, 사주, 타로, 꿈해몽을 정확하게 풀어드립니다.",
   "start_url": "/",
   "scope": "/",
+  "id": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
   "background_color": "#0D0A1A",
@@ -75,6 +76,13 @@
       "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     },
     {
+      "name": "사주풀이",
+      "short_name": "사주",
+      "url": "/saju",
+      "description": "생년월일시 사주팔자 분석",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
       "name": "타로카드",
       "short_name": "타로",
       "url": "/tarot",
@@ -88,5 +96,12 @@
       "description": "꿈 해몽 풀이",
       "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     }
-  ]
+  ],
+  "share_target": {
+    "action": "/dream",
+    "method": "GET",
+    "params": {
+      "text": "q"
+    }
+  }
 }
