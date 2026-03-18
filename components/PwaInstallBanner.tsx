@@ -44,11 +44,11 @@ export function PwaInstallBanner() {
           <p style={{ fontSize: 13, fontWeight: 700, color: '#e5e5e5' }}>앱처럼 사용하기</p>
           <p style={{ fontSize: 11, color: '#888', marginTop: 2 }}>홈 화면에 추가하면 더 빠르게 접근할 수 있어요</p>
           <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
-            <button onClick={handleInstall} style={{ borderRadius: 8, background: '#ef4444', padding: '6px 12px', fontSize: 11, fontWeight: 700, color: '#fff', border: 'none', cursor: 'pointer' }}>설치</button>
-            <button onClick={handleDismiss} style={{ borderRadius: 8, padding: '6px 12px', fontSize: 11, fontWeight: 500, color: '#666', background: 'transparent', border: 'none', cursor: 'pointer' }}>나중에</button>
+            <button onClick={handleInstall} style={{ borderRadius: 8, background: '#ef4444', padding: '10px 16px', fontSize: 14, fontWeight: 700, color: '#fff', border: 'none', cursor: 'pointer', minHeight: 44, minWidth: 44 }}>설치</button>
+            <button onClick={handleDismiss} style={{ borderRadius: 8, padding: '10px 16px', fontSize: 14, fontWeight: 500, color: '#666', background: 'transparent', border: 'none', cursor: 'pointer', minHeight: 44, minWidth: 44 }}>나중에</button>
           </div>
         </div>
-        <button onClick={handleDismiss} style={{ flexShrink: 0, background: 'none', border: 'none', color: '#555', cursor: 'pointer', fontSize: 16 }} aria-label="닫기">x</button>
+        <button onClick={handleDismiss} style={{ flexShrink: 0, background: 'none', border: 'none', color: '#555', cursor: 'pointer', fontSize: 16, minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }} aria-label="닫기">x</button>
       </div>
     </div>
   );
