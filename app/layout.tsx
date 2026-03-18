@@ -112,9 +112,7 @@ export const metadata: Metadata = {
     creator: '@unse_me',
   },
   verification: {
-    ...(process.env.NEXT_PUBLIC_GOOGLE_VERIFICATION
-      ? { google: process.env.NEXT_PUBLIC_GOOGLE_VERIFICATION }
-      : {}),
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || '',
     other: {
       ...(siteConfig.naverVerification
         ? { 'naver-site-verification': siteConfig.naverVerification }
