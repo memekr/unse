@@ -131,13 +131,13 @@ export function CrossSiteFooter({
           </p>
           <ul className="footer-legal">
             <li>
-              <a href="https://unse.me/terms">이용약관</a>
+              <a href="/terms">이용약관</a>
             </li>
             <li>
-              <a href="https://unse.me/privacy">개인정보처리방침</a>
+              <a href="/privacy">개인정보처리방침</a>
             </li>
             <li>
-              <a href="https://unse.me/contact">문의하기</a>
+              <a href="/about">소개</a>
             </li>
           </ul>
         </div>

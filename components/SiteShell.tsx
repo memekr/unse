@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { siteConfig } from '@/lib/site-config';
 import AuthButton from './AuthButton';
 import PlayStoreBadge from './PlayStoreBadge';
+import { CrossSiteFooter } from './CrossSiteFooter';
 
 type SiteShellProps = {
   children: ReactNode;
@@ -64,6 +65,9 @@ export default function SiteShell({ children, topBanner }: SiteShellProps) {
           </div>
         </div>
       </footer>
+
+      {/* Cross-site footer */}
+      <CrossSiteFooter currentDomain="unse.me" companyName="운세미" />
     </div>
   );
 }
