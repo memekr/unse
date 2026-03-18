@@ -193,6 +193,69 @@ export default function RootLayout({
     },
   };
 
+  const faqJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: [
+      {
+        '@type': 'Question',
+        name: '무료 사주 풀이 사이트는?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: '운세미(unse.me)에서 생년월일만 입력하면 무료로 사주풀이를 받을 수 있습니다. AI 기반으로 정확한 분석을 제공합니다.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: '타로 카드 읽는 방법은?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: '운세미 타로 서비스에서 카드를 선택하면 AI가 카드 의미와 배열을 분석하여 해석해 드립니다. 별도 지식 없이도 이용 가능합니다.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: '오늘의 운세는 어디서 보나요?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: '운세미 홈페이지에서 띠별, 별자리별 오늘의 운세를 매일 업데이트하여 무료로 제공합니다.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: '꿈해몽은 어떻게 하나요?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: '운세미 꿈해몽에서 꿈에 등장한 키워드를 검색하면 해당 꿈의 의미와 길흉을 상세하게 알려드립니다.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: '궁합 보는 방법은?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: '운세미 궁합 서비스에서 두 사람의 생년월일을 입력하면 사주 기반의 궁합 점수와 상성 분석을 무료로 제공합니다.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: '운세미는 무료인가요?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: '네, 운세미의 사주풀이, 타로, 꿈해몽, 별자리 운세 등 모든 서비스는 완전 무료입니다. 회원가입 없이 바로 이용하세요.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: '별자리 운세는 정확한가요?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: '운세미의 별자리 운세는 전통 점성술 이론과 AI 분석을 결합하여 매일 새롭게 작성됩니다. 12궁 별자리별 맞춤 운세를 제공합니다.',
+        },
+      },
+    ],
+  };
+
   return (
     <html lang="ko" className={notoSansKr.className}>
       <head>
@@ -212,6 +275,10 @@ export default function RootLayout({
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareAppJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
         />
       </head>
       <body>

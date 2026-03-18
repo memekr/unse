@@ -1,0 +1,25 @@
+# 운세미 (unse.me)
+> 오늘의 운세, 무료 사주풀이, 타로 점, 꿈해몽, 별자리 운세. AI 기반 무료 운세 서비스.
+
+## 핵심 페이지
+- [운세 홈](https://unse.me): 오늘의 운세, 사주풀이, 타로, 꿈해몽 종합
+- [사주풀이](https://unse.me/saju): 생년월일 기반 무료 사주 분석
+- [타로](https://unse.me/tarot): AI 타로카드 리딩
+- [꿈해몽](https://unse.me/dream): 꿈 키워드 검색 해몽
+- [별자리](https://unse.me/zodiac): 12별자리 오늘의 운세
+
+## 주요 기능
+- AI 기반 사주풀이 (생년월일 입력)
+- 타로카드 리딩
+- 꿈해몽 키워드 검색
+- 별자리별 오늘의 운세
+- 띠별 운세
+- 궁합 보기
+
+## 기술
+- Next.js 14 App Router
+- Vercel 배포
+- 한국어 전용
+
+## 오픈소스
+- GitHub: https://github.com/memekr
