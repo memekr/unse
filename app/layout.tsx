@@ -18,8 +18,8 @@ const notoSansKr = Noto_Sans_KR({
 
 const siteUrl = 'https://unse.me';
 const siteName = '운세미';
-const siteTitle = '운세미 | 오늘의 운세 · 사주 · 타로 · 꿈해몽 · 별자리';
-const siteDescription = '오늘의 운세, 무료 사주풀이, 타로 점, 꿈해몽. 매일 업데이트되는 정확한 운세를 확인하세요.';
+const siteTitle = '운세미 | 오늘의 운세 · 무료 사주 · 타로 · 꿈해몽 · 궁합 보기 무료';
+const siteDescription = '오늘의 운세, 무료 사주풀이, 타로, 꿈해몽 검색. 띠별 운세, 별자리 운세, 궁합 보기 무료, 토정비결 무료. 매일 업데이트되는 정확한 무료 운세를 확인하세요.';
 
 export const viewport: Viewport = {
   themeColor: '#0D0A1A',
@@ -39,16 +39,19 @@ export const metadata: Metadata = {
   description: siteDescription,
   applicationName: siteName,
   keywords: [
-    '운세',
-    '오늘의운세',
-    '사주',
+    '오늘의 운세',
+    '무료 사주',
     '타로',
     '꿈해몽',
-    '별자리운세',
-    '띠별운세',
-    '무료운세',
-    'AI운세',
-    '궁합',
+    '띠별 운세 오늘',
+    '별자리 운세',
+    '뱀꿈 해몽',
+    '돈꿈 해몽',
+    '궁합 보기 무료',
+    '2026 신년운세 무료',
+    '토정비결 무료',
+    '오늘 운세 좋은 띠는',
+    '무료 사주 정확한 곳 추천',
     '운세미',
   ],
   authors: [{ name: '운세미', url: siteUrl }],
@@ -200,10 +203,10 @@ export default function RootLayout({
     mainEntity: [
       {
         '@type': 'Question',
-        name: '무료 사주 풀이 사이트는?',
+        name: '무료 사주 정확한 곳 추천해주세요',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: '운세미(unse.me)에서 생년월일만 입력하면 무료로 사주풀이를 받을 수 있습니다. AI 기반으로 정확한 분석을 제공합니다.',
+          text: '운세미(unse.me)에서 생년월일만 입력하면 무료 사주풀이를 받을 수 있습니다. AI 기반으로 정확한 분석을 제공하며, 궁합 보기 무료, 토정비결 무료도 이용 가능합니다.',
         },
       },
       {

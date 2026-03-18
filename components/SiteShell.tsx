@@ -1,3 +1,6 @@
+'use client';
+
+import { useState } from 'react';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { siteConfig } from '@/lib/site-config';
@@ -15,6 +18,8 @@ type SiteShellProps = {
  * SiteShell — 공용 헤더/푸터/네비게이션
  */
 export default function SiteShell({ children, topBanner }: SiteShellProps) {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   return (
     <div className="site-shell">
       {/* 상단 배너 */}
@@ -32,9 +37,33 @@ export default function SiteShell({ children, topBanner }: SiteShellProps) {
             <span className="brand-tagline">{siteConfig.tagline}</span>
           </Link>
 
-          <nav className="header-nav" aria-label="주요 메뉴">
+          {/* Mobile menu button */}
+          <button
+            className="mobile-menu-btn"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label={mobileMenuOpen ? '메뉴 닫기' : '메뉴 열기'}
+            aria-expanded={mobileMenuOpen}
+            aria-controls="main-navigation"
+          >
+            <span className={`hamburger ${mobileMenuOpen ? 'hamburger--open' : ''}`}>
+              <span></span>
+              <span></span>
+              <span></span>
+            </span>
+          </button>
+
+          <nav
+            id="main-navigation"
+            className={`header-nav ${mobileMenuOpen ? 'header-nav--open' : ''}`}
+            aria-label="주요 메뉴"
+          >
             {siteConfig.navigation.map((item) => (
-              <Link key={item.href} href={item.href} className="header-nav-link">
+              <Link
+                key={item.href}
+                href={item.href}
+                className="header-nav-link"
+                onClick={() => setMobileMenuOpen(false)}
+              >
                 {item.label}
               </Link>
             ))}
