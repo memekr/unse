@@ -42,24 +42,24 @@ export function ShareButtons({ url, title }: ShareButtonsProps) {
 
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.5rem', padding: '1rem 0' }} role="group" aria-label="공유 버튼">
-      <span style={{ fontSize: '0.7rem', fontWeight: 500, color: '#666', marginRight: '0.25rem' }}>공유</span>
+      <span style={{ fontSize: '0.8125rem', fontWeight: 500, color: '#666', marginRight: '0.25rem' }}>공유</span>
       <button
         onClick={shareKakao}
-        style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', borderRadius: '9999px', border: '1px solid rgba(234, 179, 8, 0.2)', background: 'rgba(234, 179, 8, 0.1)', padding: '0.375rem 0.75rem', fontSize: '0.7rem', fontWeight: 500, color: '#facc15', cursor: 'pointer', minHeight: '32px' }}
+        style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', borderRadius: '9999px', border: '1px solid rgba(234, 179, 8, 0.2)', background: 'rgba(234, 179, 8, 0.1)', padding: '0.5rem 1rem', fontSize: '0.875rem', fontWeight: 500, color: '#facc15', cursor: 'pointer', minHeight: '44px', minWidth: '44px', justifyContent: 'center' }}
         aria-label="카카오톡으로 공유"
       >
         카카오톡
       </button>
       <button
         onClick={shareTwitter}
-        style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', borderRadius: '9999px', border: '1px solid rgba(56, 189, 248, 0.2)', background: 'rgba(56, 189, 248, 0.1)', padding: '0.375rem 0.75rem', fontSize: '0.7rem', fontWeight: 500, color: '#38bdf8', cursor: 'pointer', minHeight: '32px' }}
+        style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', borderRadius: '9999px', border: '1px solid rgba(56, 189, 248, 0.2)', background: 'rgba(56, 189, 248, 0.1)', padding: '0.5rem 1rem', fontSize: '0.875rem', fontWeight: 500, color: '#38bdf8', cursor: 'pointer', minHeight: '44px', minWidth: '44px', justifyContent: 'center' }}
         aria-label="X(트위터)로 공유"
       >
         X
       </button>
       <button
         onClick={copyUrl}
-        style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', borderRadius: '9999px', border: `1px solid ${copied ? 'rgba(74, 222, 128, 0.2)' : 'rgba(255,255,255,0.1)'}`, background: copied ? 'rgba(74, 222, 128, 0.1)' : 'rgba(255,255,255,0.05)', padding: '0.375rem 0.75rem', fontSize: '0.7rem', fontWeight: 500, color: copied ? '#4ade80' : '#999', cursor: 'pointer', minHeight: '32px' }}
+        style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', borderRadius: '9999px', border: `1px solid ${copied ? 'rgba(74, 222, 128, 0.2)' : 'rgba(255,255,255,0.1)'}`, background: copied ? 'rgba(74, 222, 128, 0.1)' : 'rgba(255,255,255,0.05)', padding: '0.5rem 1rem', fontSize: '0.875rem', fontWeight: 500, color: copied ? '#4ade80' : '#999', cursor: 'pointer', minHeight: '44px', minWidth: '44px', justifyContent: 'center' }}
         aria-label="URL 복사"
       >
         {copied ? '복사됨!' : 'URL 복사'}
