@@ -537,6 +537,7 @@ img {
   text-align: center;
   padding: 2.5rem 0 2rem;
   position: relative;
+  overflow: hidden;
 }
 
 .hero-fortune::before {

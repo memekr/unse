@@ -136,18 +136,7 @@ export default function HomeClient() {
           </p>
         </section>
 
-        {/* Google 로그인 상태 */}
-        {isConfigured && user && (
-          <div style={{ textAlign: 'center', margin: '1rem 0', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--color-glass)', border: '1px solid var(--color-glass-border)' }}>
-            <span style={{ fontSize: '0.875rem' }}>
-              {user.photoURL && <img src={user.photoURL} alt="" style={{ width: '1.25rem', height: '1.25rem', borderRadius: '50%', verticalAlign: 'middle', marginRight: '0.375rem' }} />}
-              {user.displayName ?? user.email}{' 님 환영합니다'}
-            </span>
-            <button onClick={signOutUser} style={{ marginLeft: '0.75rem', padding: '0.25rem 0.5rem', borderRadius: '0.375rem', border: '1px solid var(--color-glass-border)', background: 'transparent', color: 'var(--color-text-dim)', fontSize: '0.6875rem', cursor: 'pointer' }}>
-              {'로그아웃'}
-            </button>
-          </div>
-        )}
+        {/* Google 로그인 상태는 헤더의 AuthButton으로 이동됨 */}
 
         <form className="saju-form" onSubmit={handleSubmit} style={{ marginTop: '1.5rem' }}>
           {/* 최근 조회 */}
@@ -211,28 +200,7 @@ export default function HomeClient() {
             {loading ? '\u23F3 분석 중...' : '\uD83D\uDD2E 나의 운세 분석하기'}
           </button>
 
-          {/* 구글 로그인 옵션 */}
-          {isConfigured && !user && (
-            <div style={{ textAlign: 'center', marginTop: '1rem' }}>
-              <p style={{ fontSize: '0.75rem', color: 'var(--color-text-dim)', marginBottom: '0.5rem' }}>
-                {'결과를 저장하고 싶다면'}
-              </p>
-              <button type="button" onClick={signInWithGoogle} style={{
-                display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
-                padding: '0.625rem 1.5rem', borderRadius: '9999px',
-                border: '1px solid var(--color-glass-border)', background: 'var(--color-glass)',
-                color: 'var(--color-text)', fontSize: '0.875rem', fontWeight: 600, cursor: 'pointer',
-              }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
-                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                </svg>
-                {'Google로 로그인'}
-              </button>
-            </div>
-          )}
+          {/* 구글 로그인은 헤더로 이동 */}
         </form>
 
         {/* 앱 다운로드 CTA */}

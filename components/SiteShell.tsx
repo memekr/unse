@@ -34,7 +34,7 @@ export default function SiteShell({ children, topBanner }: SiteShellProps) {
         <div className="site-header-inner">
           <Link href="/" className="brand-lockup" aria-label="운세미 홈으로 이동">
             <span className="brand-mark">{siteConfig.siteName}</span>
-            <span className="brand-tagline">{siteConfig.tagline}</span>
+            <span className="brand-tagline">unse.me</span>
           </Link>
 
           {/* Mobile menu button */}
