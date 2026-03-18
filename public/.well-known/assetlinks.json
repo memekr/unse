@@ -3,6 +3,6 @@
   "target": {
     "namespace": "android_app",
     "package_name": "me.unse.app",
-    "sha256_cert_fingerprints": ["TODO:REPLACE_WITH_ACTUAL_FINGERPRINT"]
+    "sha256_cert_fingerprints": ["AF:F3:D5:F6:6D:AE:C4:8D:20:76:AC:A3:59:7D:A8:B1:FA:29:F0:51:24:1E:C3:71:FE:8A:E0:AB:3C:70:03:57"]
   }
 }]
