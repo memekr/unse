@@ -18,7 +18,7 @@ const notoSansKr = Noto_Sans_KR({
 const siteUrl = 'https://unse.me';
 const siteName = '운세미';
 const siteTitle = '운세미 | 오늘의 운세 · 사주 · 타로 · 꿈해몽 · 별자리';
-const siteDescription = 'AI 기반 무료 운세 서비스. 띠별·별자리별 오늘의 운세, 사주풀이, 타로카드 해석, 꿈해몽을 정확하게 풀어드립니다.';
+const siteDescription = '오늘의 운세, 무료 사주풀이, 타로 점, 꿈해몽. 매일 업데이트되는 정확한 운세를 확인하세요.';
 
 export const viewport: Viewport = {
   themeColor: '#0D0A1A',
