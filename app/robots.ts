@@ -23,6 +23,26 @@ export default function robots(): MetadataRoute.Robots {
         allow: '/',
         crawlDelay: 0,
       },
+      {
+        userAgent: 'GPTBot',
+        allow: '/',
+      },
+      {
+        userAgent: 'ChatGPT-User',
+        allow: '/',
+      },
+      {
+        userAgent: 'ClaudeBot',
+        allow: '/',
+      },
+      {
+        userAgent: 'PerplexityBot',
+        allow: '/',
+      },
+      {
+        userAgent: 'GoogleOther',
+        allow: '/',
+      },
     ],
     sitemap: 'https://unse.me/sitemap.xml',
   };

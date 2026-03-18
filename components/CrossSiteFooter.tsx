@@ -71,6 +71,13 @@ const SITE_NETWORK: SiteLink[] = [
     linkTo: ['warwar.me', 'jusik.me', 'agent.me.kr'],
   },
   {
+    domain: 'alihalin.com',
+    name: '알리익스프레스 할인코드 - 알리할인닷컴',
+    category: '알리 쿠폰 · 알리 프로모션 코드',
+    description: '알리익스프레스 할인코드, 알리 쿠폰, 알리 프로모션 코드 - 알리 초이스데이, 알리 알급날 쿠폰 총정리',
+    linkTo: ['alimaster.shop', 'valuepick.me', 'plusmoa.shop'],
+  },
+  {
     domain: 'agent.me.kr',
     name: 'AI 에이전트',
     category: 'AI 서비스',
