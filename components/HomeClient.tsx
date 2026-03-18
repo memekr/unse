@@ -16,6 +16,7 @@ import {
 } from '@/lib/fortune-utils';
 import { analyzeAdvancedSaju, type AdvancedSajuResult } from '@/lib/saju-advanced';
 import ProductAdBanner from '@/components/ads/ProductAdBanner';
+import AppDownloadSection from '@/components/AppDownloadSection';
 
 function stars(n: number) {
   return '\u2B50'.repeat(n) + '\u2606'.repeat(5 - n);
@@ -233,6 +234,9 @@ export default function HomeClient() {
             </div>
           )}
         </form>
+
+        {/* 앱 다운로드 CTA */}
+        <AppDownloadSection />
 
         {/* 하단 서비스 바로가기 */}
         <section style={{ marginTop: '3rem' }}>

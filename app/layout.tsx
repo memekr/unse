@@ -5,6 +5,7 @@ import SiteShell from '@/components/SiteShell';
 import GoogleAnalytics from '@/components/GoogleAnalytics';
 import { AuthProvider } from '@/components/AuthContext';
 import './globals.css';
+import AppSmartBanner from '@/components/AppSmartBanner';
 
 const notoSansKr = Noto_Sans_KR({
   subsets: ['latin'],
@@ -216,6 +217,7 @@ export default function RootLayout({
         />
       </head>
       <body>
+        <AppSmartBanner />
         <a href="#main-content" className="skip-to-content" aria-label="본문으로 바로 이동">본문으로 이동</a>
         <GoogleAnalytics />
         <AuthProvider>

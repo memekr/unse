@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { siteConfig } from '@/lib/site-config';
 import AuthButton from './AuthButton';
+import PlayStoreBadge from './PlayStoreBadge';
 
 type SiteShellProps = {
   children: ReactNode;
@@ -58,6 +59,9 @@ export default function SiteShell({ children, topBanner }: SiteShellProps) {
               </Link>
             ))}
           </nav>
+          <div style={{ marginTop: '1rem' }}>
+            <PlayStoreBadge />
+          </div>
         </div>
       </footer>
     </div>
