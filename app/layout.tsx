@@ -6,6 +6,7 @@ import GoogleAnalytics from '@/components/GoogleAnalytics';
 import { AuthProvider } from '@/components/AuthContext';
 import './globals.css';
 import AppSmartBanner from '@/components/AppSmartBanner';
+import { PwaInstallBanner } from '@/components/PwaInstallBanner';
 
 const notoSansKr = Noto_Sans_KR({
   subsets: ['latin'],
@@ -295,6 +296,7 @@ export default function RootLayout({
           본 사이트의 일부 링크는 제휴 마케팅 링크로, 이를 통한 구매 시 사이트 운영에 도움이 되는 소정의 수수료를 받을 수 있습니다.
         </p>
         </AuthProvider>
+        <PwaInstallBanner />
         <script
           dangerouslySetInnerHTML={{
             __html: `
