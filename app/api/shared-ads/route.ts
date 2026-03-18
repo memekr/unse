@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-const SHARED_ADS_API = 'https://serus-korea-vercel.vercel.app/api/shared-ads';
+const SHARED_ADS_API = 'https://yuchul.com/api/shared-ads';
 const SITE_ID = 'unse';
 
 /**
