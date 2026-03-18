@@ -9,6 +9,8 @@
   "background_color": "#0D0A1A",
   "theme_color": "#0D0A1A",
   "prefer_related_applications": false,
+  "lang": "ko-KR",
+  "dir": "ltr",
   "icons": [
     {
       "src": "/favicon.ico",
@@ -40,5 +42,51 @@
       "purpose": "maskable"
     }
   ],
-  "categories": ["lifestyle"]
+  "categories": ["lifestyle", "entertainment"],
+  "screenshots": [
+    {
+      "src": "/screenshots/screenshot-wide.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "운세미 메인 화면 - 무료 운세 서비스"
+    },
+    {
+      "src": "/screenshots/screenshot-narrow.png",
+      "sizes": "540x960",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "운세미 모바일 화면 - 오늘의 운세"
+    }
+  ],
+  "related_applications": [
+    {
+      "platform": "play",
+      "url": "https://play.google.com/store/apps/details?id=com.unse.app",
+      "id": "com.unse.app"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "오늘의 운세",
+      "short_name": "운세",
+      "url": "/horoscope",
+      "description": "띠별·별자리별 오늘의 운세 확인",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "타로카드",
+      "short_name": "타로",
+      "url": "/tarot",
+      "description": "타로카드 해석",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "꿈해몽",
+      "short_name": "꿈해몽",
+      "url": "/dream",
+      "description": "꿈 해몽 풀이",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
 }

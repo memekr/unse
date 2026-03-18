@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0D0A1A" />
+  <title>오프라인 - 운세미</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0D0A1A;
+      color: #e5e7eb;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .container {
+      text-align: center;
+      padding: 2rem;
+      max-width: 400px;
+    }
+    .icon {
+      font-size: 4rem;
+      margin-bottom: 1.5rem;
+    }
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: 0.75rem;
+      color: #fff;
+    }
+    p {
+      font-size: 1rem;
+      color: #9ca3af;
+      line-height: 1.6;
+      margin-bottom: 2rem;
+    }
+    .retry-btn {
+      display: inline-block;
+      padding: 0.75rem 2rem;
+      background: #7c3aed;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .retry-btn:hover { background: #6d28d9; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="icon">&#128302;</div>
+    <h1>인터넷 연결이 필요합니다</h1>
+    <p>운세미 서비스를 이용하려면 인터넷 연결이 필요합니다. 연결 상태를 확인한 후 다시 시도해 주세요.</p>
+    <button class="retry-btn" onclick="window.location.reload()">다시 시도</button>
+  </div>
+</body>
+</html>
