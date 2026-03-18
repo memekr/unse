@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { FormEvent } from 'react';
 import { calculateSaju, FIVE_ELEMENTS_KO, FIVE_ELEMENTS_NAME, FIVE_ELEMENTS_COLOR } from '@/lib/saju-engine';
 import ProductAdBanner from '@/components/ads/ProductAdBanner';
@@ -27,6 +27,45 @@ export default function SajuClient() {
   const [birthTime, setBirthTime] = useState<number>(-1);
   const [result, setResult] = useState<SajuResult | null>(null);
   const [loading, setLoading] = useState(false);
+  const [shareMsg, setShareMsg] = useState('');
+
+  // URL 파라미터에서 결과 복원
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const birth = params.get('birth');
+    const time = params.get('time');
+    const g = params.get('gender');
+    if (birth && g && /^\d{8}$/.test(birth)) {
+      const y = parseInt(birth.substring(0, 4));
+      const m = parseInt(birth.substring(4, 6));
+      const d = parseInt(birth.substring(6, 8));
+      const t = time ? parseInt(time) : -1;
+      const dateStr = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      setBirthDate(dateStr);
+      setGender(g);
+      setBirthTime(t);
+      const sajuResult = calculateSaju(y, m, d, t, g);
+      setResult(sajuResult);
+    }
+  }, []);
+
+  const handleShare = useCallback(() => {
+    if (!birthDate || !gender) return;
+    const date = new Date(birthDate);
+    const birth = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`;
+    const params = new URLSearchParams({ birth, gender });
+    if (birthTime >= 0) params.set('time', String(birthTime));
+    const url = `${window.location.origin}/saju?${params.toString()}`;
+
+    if (navigator.share) {
+      navigator.share({ title: '운세미 사주풀이 결과', url }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(url).then(() => {
+        setShareMsg('링크가 복사되었습니다!');
+        setTimeout(() => setShareMsg(''), 2000);
+      }).catch(() => {});
+    }
+  }, [birthDate, gender, birthTime]);
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -41,6 +80,12 @@ export default function SajuClient() {
       const sajuResult = calculateSaju(year, month, day, birthTime, gender);
       setResult(sajuResult);
       setLoading(false);
+
+      // URL 업데이트
+      const birth = `${year}${String(month).padStart(2, '0')}${String(day).padStart(2, '0')}`;
+      const params = new URLSearchParams({ birth, gender });
+      if (birthTime >= 0) params.set('time', String(birthTime));
+      window.history.replaceState(null, '', `/saju?${params.toString()}`);
     }, 1000);
   }
 
@@ -261,6 +306,27 @@ export default function SajuClient() {
             <div className="saju-section" style={{ borderBottom: 'none' }}>
               <div className="saju-section-title">{'\uD83C\uDF1F 올해의 운세'}</div>
               <p className="saju-section-text">{result.yearly}</p>
+            </div>
+
+            {/* 공유하기 버튼 */}
+            <div style={{ textAlign: 'center', marginTop: '1.25rem' }}>
+              <button
+                onClick={handleShare}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
+                  padding: '0.75rem 1.5rem', borderRadius: '9999px',
+                  background: 'var(--gradient-primary)', color: '#fff',
+                  fontWeight: 700, fontSize: '0.875rem', cursor: 'pointer',
+                  border: 'none', boxShadow: '0 2px 8px var(--color-cta-glow)',
+                }}
+              >
+                {'\uD83D\uDD17 결과 공유하기'}
+              </button>
+              {shareMsg && (
+                <p style={{ fontSize: '0.75rem', color: 'var(--color-accent)', marginTop: '0.5rem' }}>
+                  {shareMsg}
+                </p>
+              )}
             </div>
           </div>
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import type { FormEvent } from 'react';
 import { DREAM_DATABASE, generateLottoNumbers } from '@/lib/dream-data';
 import ProductAdBanner from '@/components/ads/ProductAdBanner';
@@ -21,6 +21,16 @@ export default function DreamClient() {
   const [category, setCategory] = useState('');
   const [selectedKeywords, setSelectedKeywords] = useState<string[]>([]);
   const [showLotto, setShowLotto] = useState(false);
+  const [shareMsg, setShareMsg] = useState('');
+
+  // URL 파라미터에서 검색어 복원
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const q = params.get('q');
+    if (q) {
+      setQuery(q);
+    }
+  }, []);
 
   const results = useMemo(() => {
     let filtered: DreamEntry[] = DREAM_DATABASE;
@@ -37,8 +47,30 @@ export default function DreamClient() {
 
   function handleSearch(e: FormEvent) {
     e.preventDefault();
-    // results는 이미 memo로 계산됨
+    // URL 업데이트
+    if (query.trim()) {
+      const params = new URLSearchParams({ q: query.trim() });
+      window.history.replaceState(null, '', `/dream?${params.toString()}`);
+    } else {
+      window.history.replaceState(null, '', '/dream');
+    }
   }
+
+  const handleShare = useCallback(() => {
+    if (!query.trim() && !category) return;
+    const params = new URLSearchParams();
+    if (query.trim()) params.set('q', query.trim());
+    const url = `${window.location.origin}/dream?${params.toString()}`;
+
+    if (navigator.share) {
+      navigator.share({ title: '운세미 꿈해몽 결과', url }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(url).then(() => {
+        setShareMsg('링크가 복사되었습니다!');
+        setTimeout(() => setShareMsg(''), 2000);
+      }).catch(() => {});
+    }
+  }, [query, category]);
 
   function handleCategoryClick(cat: string) {
     setCategory(cat);
@@ -214,6 +246,29 @@ export default function DreamClient() {
           ))
         )}
       </div>
+
+      {/* 공유하기 버튼 */}
+      {query.trim() && results.length > 0 && (
+        <div style={{ textAlign: 'center', margin: '1rem 0' }}>
+          <button
+            onClick={handleShare}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
+              padding: '0.625rem 1.25rem', borderRadius: '9999px',
+              background: 'var(--gradient-primary)', color: '#fff',
+              fontWeight: 700, fontSize: '0.8125rem', cursor: 'pointer',
+              border: 'none', boxShadow: '0 2px 8px var(--color-cta-glow)',
+            }}
+          >
+            {'\uD83D\uDD17 결과 공유하기'}
+          </button>
+          {shareMsg && (
+            <p style={{ fontSize: '0.75rem', color: 'var(--color-accent)', marginTop: '0.5rem' }}>
+              {shareMsg}
+            </p>
+          )}
+        </div>
+      )}
 
       {/* 꿈해몽 결과가 있을 때 상품 추천 */}
       {(query.trim() || category) && results.length > 0 && (

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import ProductAdBanner from '@/components/ads/ProductAdBanner';
 
 export type ZodiacFortune = {
@@ -46,6 +46,16 @@ export default function HoroscopeClient({
 }) {
   const [selected, setSelected] = useState<string | null>(null);
   const detailRef = useRef<HTMLDivElement>(null);
+  const [shareMsg, setShareMsg] = useState('');
+
+  // URL 파라미터에서 별자리 복원
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const sign = params.get('sign');
+    if (sign && fortunes.some(f => f.slug === sign)) {
+      setSelected(sign);
+    }
+  }, [fortunes]);
 
   const selectedZodiac = selected
     ? fortunes.find((z) => z.slug === selected) ?? null
@@ -55,7 +65,31 @@ export default function HoroscopeClient({
     if (selectedZodiac && detailRef.current) {
       detailRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
-  }, [selectedZodiac]);
+    // URL 업데이트
+    if (selected) {
+      const today = new Date();
+      const dateParam = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
+      window.history.replaceState(null, '', `/horoscope?date=${dateParam}&sign=${selected}`);
+    } else {
+      window.history.replaceState(null, '', '/horoscope');
+    }
+  }, [selectedZodiac, selected]);
+
+  const handleShare = useCallback(() => {
+    if (!selected) return;
+    const today = new Date();
+    const dateParam = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
+    const url = `${window.location.origin}/horoscope?date=${dateParam}&sign=${selected}`;
+
+    if (navigator.share) {
+      navigator.share({ title: `${selectedZodiac?.name} 오늘의 운세 - 운세미`, url }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(url).then(() => {
+        setShareMsg('링크가 복사되었습니다!');
+        setTimeout(() => setShareMsg(''), 2000);
+      }).catch(() => {});
+    }
+  }, [selected, selectedZodiac]);
 
   // 상세 뷰
   if (selectedZodiac) {
@@ -207,6 +241,27 @@ export default function HoroscopeClient({
             &ldquo;{z.advice}&rdquo;
           </p>
         </section>
+
+        {/* 공유하기 버튼 */}
+        <div style={{ textAlign: 'center', margin: '1rem 0' }}>
+          <button
+            onClick={handleShare}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
+              padding: '0.75rem 1.5rem', borderRadius: '9999px',
+              background: 'var(--gradient-primary)', color: '#fff',
+              fontWeight: 700, fontSize: '0.875rem', cursor: 'pointer',
+              border: 'none', boxShadow: '0 2px 8px var(--color-cta-glow)',
+            }}
+          >
+            {'\uD83D\uDD17 결과 공유하기'}
+          </button>
+          {shareMsg && (
+            <p style={{ fontSize: '0.75rem', color: 'var(--color-accent)', marginTop: '0.5rem' }}>
+              {shareMsg}
+            </p>
+          )}
+        </div>
 
         {/* 맞춤 상품 추천 */}
         <ProductAdBanner

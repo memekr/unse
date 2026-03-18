@@ -603,6 +603,144 @@ export function determineYongshin(saju: SajuResult): YongshinInfo {
    8. 통합 고급 분석 결과
    ══════════════════════════════════ */
 
+/* ══════════════════════════════════
+   십신 기반 성격/적성/재물운 해석
+   ══════════════════════════════════ */
+
+export type TenGodAnalysis = {
+  personality: string;
+  aptitude: string;
+  wealth: string;
+};
+
+/** 사주 전체의 십신 분포를 분석하여 성격/적성/재물운 해석 */
+export function analyzeTenGodProfile(
+  dayMasterStem: number,
+  pillars: Pillar[],
+  strength: 'strong' | 'weak' | 'balanced',
+): TenGodAnalysis {
+  // 각 주의 천간에서 십신 분포를 계산
+  const tenGodCounts = new Array(10).fill(0);
+  for (const p of pillars) {
+    if (p.stem === dayMasterStem) {
+      tenGodCounts[0]++; // 비견
+    } else {
+      const idx = getTenGod(dayMasterStem, p.stem);
+      tenGodCounts[idx]++;
+    }
+  }
+  // 지지의 본기(本氣)에서도 십신 카운트
+  const BRANCH_MAIN_STEM = [9, 5, 0, 1, 4, 2, 3, 5, 6, 7, 4, 8]; // 자축인묘진사오미신유술해
+  for (const p of pillars) {
+    const branchStem = BRANCH_MAIN_STEM[p.branch];
+    if (branchStem === dayMasterStem) {
+      tenGodCounts[0]++;
+    } else {
+      const idx = getTenGod(dayMasterStem, branchStem);
+      tenGodCounts[idx]++;
+    }
+  }
+
+  // 그룹별 합산: 비겁(0,1), 식상(2,3), 재성(4,5), 관성(6,7), 인성(8,9)
+  const bigyeop = tenGodCounts[0] + tenGodCounts[1];
+  const siksang = tenGodCounts[2] + tenGodCounts[3];
+  const jaesung = tenGodCounts[4] + tenGodCounts[5];
+  const gwansung = tenGodCounts[6] + tenGodCounts[7];
+  const insung = tenGodCounts[8] + tenGodCounts[9];
+
+  // 가장 강한 십신 그룹 결정
+  const groups = [
+    { name: '비겁', count: bigyeop },
+    { name: '식상', count: siksang },
+    { name: '재성', count: jaesung },
+    { name: '관성', count: gwansung },
+    { name: '인성', count: insung },
+  ];
+  const sorted = [...groups].sort((a, b) => b.count - a.count);
+  const dominant = sorted[0].name;
+  const secondary = sorted[1].name;
+
+  // ── 성격 해석 ──
+  const personalityMap: Record<string, string> = {
+    '비겁': '자아가 강하고 독립심이 뛰어납니다. 주도적으로 일을 이끌어가는 성격으로, 자기 확신이 강합니다. 경쟁 상황에서 빛을 발하며, 동료나 형제와의 관계에서 리더 역할을 자연스럽게 맡게 됩니다. 다만 고집이 세다는 평가를 받을 수 있으니 타인의 의견에도 귀 기울이는 노력이 필요합니다.',
+    '식상': '창의력과 표현력이 뛰어나며, 예술적 감각이 남다릅니다. 새로운 아이디어를 끊임없이 내놓고, 자유로운 사고방식을 가지고 있습니다. 말재주가 좋고 사교적이며, 식복(食福)이 있어 먹는 것에 관심이 많습니다. 감정이 풍부하고 섬세한 성격입니다.',
+    '재성': '현실적이고 실용적인 성격입니다. 재물에 대한 감각이 뛰어나고 경제관념이 확실합니다. 부지런하고 성실하며, 목표를 향해 꾸준히 노력하는 타입입니다. 인간관계에서도 실리를 중시하며, 가정을 소중히 여기는 성격입니다.',
+    '관성': '책임감이 강하고 원칙을 중시합니다. 조직 내에서 질서를 유지하는 역할을 잘 수행하며, 규율과 예절을 중요하게 생각합니다. 명예와 사회적 평판에 민감하며, 자기 절제력이 뛰어납니다. 다만 지나친 완벽주의는 스트레스의 원인이 될 수 있습니다.',
+    '인성': '학구적이고 지식에 대한 욕구가 강합니다. 깊이 있는 사고를 좋아하며, 연구나 학문 분야에서 두각을 나타냅니다. 어머니나 스승의 영향을 많이 받으며, 자비롭고 포용력이 넓습니다. 내성적인 면이 있으나 신뢰받는 성격입니다.',
+  };
+
+  // ── 적성 해석 ──
+  const aptitudeMap: Record<string, Record<string, string>> = {
+    '비겁': {
+      strong: '리더십이 뛰어나 경영, 스포츠, 프리랜서, 자영업 분야에서 성공할 수 있습니다. 독립적으로 일할 수 있는 환경이 적합하며, 경쟁이 치열한 분야에서 두각을 나타냅니다. 군인, 운동선수, 벤처 창업 등이 어울립니다.',
+      weak: '협력과 팀워크를 통해 성장하는 환경이 좋습니다. 파트너십 기반의 사업이나 공동 프로젝트에서 능력을 발휘합니다. 컨설팅, 중개, 협상 관련 직종이 적합합니다.',
+      balanced: '조직 내에서도 개인 역량을 발휘할 수 있는 위치가 적합합니다. 팀 리더, 프로젝트 매니저, 코치 등 리더십과 협업이 모두 필요한 역할이 어울립니다.',
+    },
+    '식상': {
+      strong: '예술, 엔터테인먼트, 교육, 요리, 작가, 유튜버 등 창작 분야에서 성공할 가능성이 높습니다. 자유롭게 표현할 수 있는 환경이 필요하며, 정형화된 조직보다 자유업이 적합합니다.',
+      weak: '기술적 전문성을 갖춘 분야가 좋습니다. IT 개발, 디자인, 마케팅 등 창의성과 기술이 결합된 직종에서 안정적으로 능력을 발휘합니다.',
+      balanced: '창의적이면서도 실용적인 분야가 적합합니다. 광고, UX디자인, 기획, 콘텐츠 제작 등 아이디어와 실행력이 모두 필요한 직종이 어울립니다.',
+    },
+    '재성': {
+      strong: '금융, 부동산, 무역, 유통, 사업 분야에서 성공할 수 있습니다. 재물 감각이 뛰어나 투자나 자산 관리에 재능이 있습니다. 회계사, 세무사, 은행원, 무역상 등이 적합합니다.',
+      weak: '안정적인 수입이 보장되는 공무원, 대기업, 연구직 등이 적합합니다. 재물보다 전문성을 키우는 데 집중하면 자연스럽게 경제적 안정도 따라옵니다.',
+      balanced: '재무와 전문성을 동시에 활용하는 분야가 좋습니다. 경영 컨설턴트, 자산운용사, 스타트업 경영 등이 어울립니다.',
+    },
+    '관성': {
+      strong: '공무원, 법조인, 군인, 경찰, 관리직 등 조직적이고 체계적인 분야에서 성공합니다. 명예와 직위를 추구하는 성향이 있어 정치나 행정 분야도 적합합니다.',
+      weak: '자유로운 환경에서 일하는 것이 좋습니다. 창업, 프리랜서, 예술 분야 등 규제가 적은 직종이 적합하며, 자기만의 페이스로 일할 수 있는 환경을 찾으세요.',
+      balanced: '조직 내에서 전문성을 갖춘 위치가 적합합니다. 전문직(의사, 변호사, 교수), 기업 내 전문가 등이 어울립니다.',
+    },
+    '인성': {
+      strong: '교육, 연구, 학문, 종교, 철학 분야에서 성공할 수 있습니다. 지식을 전달하는 직업이 적합하며, 교사, 교수, 연구원, 작가, 상담사 등이 어울립니다.',
+      weak: '실전 경험을 통해 성장하는 분야가 좋습니다. 영업, 마케팅, 서비스업 등 현장에서 직접 부딪히며 배울 수 있는 직종이 적합합니다.',
+      balanced: '이론과 실전을 겸비한 분야가 적합합니다. 변리사, 감정평가사, 통역사 등 전문 지식과 실무 능력이 모두 필요한 직종이 어울립니다.',
+    },
+  };
+
+  // ── 재물운 해석 ──
+  const wealthMap: Record<string, Record<string, string>> = {
+    '비겁': {
+      strong: '재물에 대한 경쟁심이 강하여 적극적으로 돈을 벌지만, 지출도 과감합니다. 독립 사업이나 투자에서 큰 수익을 올릴 수 있으나, 동업은 재물 분쟁의 원인이 될 수 있으니 주의하세요. 개인 사업이 가장 적합합니다.',
+      weak: '재물은 꾸준히 들어오나 크게 불어나기 어렵습니다. 저축과 절약을 통해 자산을 늘리는 전략이 좋으며, 안정적인 투자(예금, 채권)가 적합합니다.',
+      balanced: '균형 잡힌 재물운입니다. 적절한 투자와 저축의 조화로 꾸준히 자산을 불릴 수 있습니다. 분산 투자 전략이 유효합니다.',
+    },
+    '식상': {
+      strong: '창의적인 방법으로 돈을 버는 재능이 있습니다. 콘텐츠 제작, 특허, 저작권 등 지식재산을 통한 수익이 유리합니다. 재물이 들어왔다 나가는 패턴이 있으니 관리가 중요합니다.',
+      weak: '기술이나 전문성을 통한 안정적 수입이 중요합니다. 부업보다는 본업에 집중하여 전문성을 높이면 자연스럽게 수입이 증가합니다.',
+      balanced: '다양한 수입원을 만들 수 있는 재물운입니다. 본업 외에 부업이나 투자를 통해 복합적인 수익 구조를 만들어보세요.',
+    },
+    '재성': {
+      strong: '타고난 재물운이 강합니다. 돈을 다루는 감각이 뛰어나고, 재테크에 소질이 있습니다. 부동산, 주식, 사업 등 다양한 방면에서 재물을 모을 수 있습니다. 다만 과욕은 금물이며, 분수에 맞는 투자가 중요합니다.',
+      weak: '재물이 잘 모이지 않는 구조이지만, 인성(학문)이나 관성(직장)을 통해 간접적으로 재물을 얻을 수 있습니다. 전문 자격증 취득이나 직위 상승을 통한 수입 증가를 추구하세요.',
+      balanced: '무리하지 않으면 안정적인 재물운입니다. 급격한 부의 증가보다 꾸준한 축적이 적합하며, 장기 투자가 좋은 결과를 가져옵니다.',
+    },
+    '관성': {
+      strong: '직장이나 조직을 통한 안정적인 수입이 주된 재물 루트입니다. 승진과 함께 수입이 늘어나는 구조이며, 사업보다는 봉직이 더 유리합니다. 퇴직 후를 위한 연금이나 장기 저축을 추천합니다.',
+      weak: '자유로운 방법으로 재물을 모을 수 있습니다. 프리랜서, 자영업, 온라인 비즈니스 등 자기 주도적 수입원이 유리합니다.',
+      balanced: '안정적인 직장 수입과 부업 수입을 병행하면 좋습니다. 전문성을 활용한 컨설팅이나 강의 등 추가 수입원을 만들어보세요.',
+    },
+    '인성': {
+      strong: '재물보다 명예와 학문에 집중하는 경향이 있어, 직접적 재물운은 약할 수 있습니다. 하지만 전문 지식이나 자격을 통한 안정적 수입이 가능합니다. 교육, 출판, 연구 분야에서의 수입이 주된 재물 루트입니다.',
+      weak: '현실적 재물 감각을 키울 필요가 있습니다. 재테크 공부를 통해 재물 관리 능력을 향상시키면 운이 상승합니다.',
+      balanced: '지식과 재물의 균형이 좋습니다. 전문 지식을 활용한 사업이나 컨설팅이 재물 증식에 효과적입니다.',
+    },
+  };
+
+  const personality = (personalityMap[dominant] ?? personalityMap['비겁'])
+    + ` 보조적으로 ${secondary === dominant ? '비겁' : secondary}의 성향도 가지고 있어, `
+    + (secondary === '식상' ? '창의적 표현에도 능합니다.' :
+       secondary === '재성' ? '현실적 감각도 갖추고 있습니다.' :
+       secondary === '관성' ? '사회적 책임감도 강합니다.' :
+       secondary === '인성' ? '학구적인 면모도 있습니다.' :
+       '자기 주도적인 면모도 있습니다.');
+
+  const aptitude = aptitudeMap[dominant]?.[strength] ?? aptitudeMap['비겁']['balanced'];
+  const wealth = wealthMap[dominant]?.[strength] ?? wealthMap['비겁']['balanced'];
+
+  return { personality, aptitude, wealth };
+}
+
 export type AdvancedSajuResult = {
   // 각 주의 십신
   tenGods: {
@@ -631,6 +769,8 @@ export type AdvancedSajuResult = {
   // 일간 강약
   dayMasterStrength: 'strong' | 'weak' | 'balanced';
   dayMasterDesc: string;
+  // 십신 기반 심층 해석
+  tenGodAnalysis: TenGodAnalysis;
 };
 
 export function analyzeAdvancedSaju(
@@ -696,9 +836,13 @@ export function analyzeAdvancedSaju(
     dayMasterDesc = `중화(中和)에 가까운 균형 잡힌 사주입니다. 유연하게 상황에 대처하는 능력이 뛰어나며, 다양한 분야에서 성과를 낼 수 있습니다.`;
   }
 
+  // 십신 기반 성격/적성/재물운 심층 분석
+  const tenGodAnalysis = analyzeTenGodProfile(dayMaster, pillars, dayMasterStrength);
+
   return {
     tenGods, twelveStages, sinsal, interactions,
     daeun, seun, yongshin,
     dayMasterStrength, dayMasterDesc,
+    tenGodAnalysis,
   };
 }
