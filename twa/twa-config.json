@@ -1,0 +1,26 @@
+{
+  "host": "unse.me",
+  "name": "운세미 - 오늘의 운세·사주·타로",
+  "shortName": "운세미",
+  "themeColor": "#0D0A1A",
+  "navigationColor": "#0D0A1A",
+  "backgroundColor": "#0D0A1A",
+  "startUrl": "/",
+  "iconUrl": "https://unse.me/icon-512.png",
+  "maskableIconUrl": "https://unse.me/icon-512.png",
+  "packageId": "me.unse.app",
+  "appVersion": "1.0.0",
+  "appVersionCode": 1,
+  "display": "standalone",
+  "orientation": "portrait",
+  "signingKey": {
+    "path": "./signing-key.keystore",
+    "alias": "unse"
+  },
+  "fallbackType": "customtabs",
+  "enableNotifications": false,
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "launcherName": "운세미",
+  "splashScreenFadeOutDuration": 300
+}
