@@ -30,7 +30,7 @@ const SITE_NETWORK: SiteLink[] = [
   },
   {
     domain: 'jusik.me',
-    name: '저스틱',
+    name: '주식미',
     category: '주식 정보',
     description: '주식 정보 포털 및 시장 분석',
     linkTo: ['warwar.me', 'yuchul.com', 'valuepick.me'],
@@ -131,13 +131,13 @@ export function CrossSiteFooter({
           </p>
           <ul className="footer-legal">
             <li>
-              <a href="https://example.com/terms">이용약관</a>
+              <a href="https://unse.me/terms">이용약관</a>
             </li>
             <li>
-              <a href="https://example.com/privacy">개인정보처리방침</a>
+              <a href="https://unse.me/privacy">개인정보처리방침</a>
             </li>
             <li>
-              <a href="https://example.com/contact">문의하기</a>
+              <a href="https://unse.me/contact">문의하기</a>
             </li>
           </ul>
         </div>
