@@ -1,8 +1,9 @@
+// @ts-nocheck
 'use client';
 
 /**
- * 상품 추천 배너 (스텁)
- * 실제 구현은 빌드 시 _private/ 모듈로 대체됩니다.
+ * 상품 추천 배너
+ * _private/ 존재 시 실제 구현 로드, 없으면 null
  */
 
 import type { FortuneContext } from '@/lib/ads/types';
@@ -16,6 +17,12 @@ type Props = {
 
 export type { FortuneContext };
 
-export default function ProductAdBanner(_props: Props) {
+let Impl: any = null;
+try {
+  Impl = require('../../_private/ads/ProductAdBanner').default;
+} catch {}
+
+export default function ProductAdBanner(props: Props) {
+  if (Impl) return <Impl {...props} />;
   return null;
 }

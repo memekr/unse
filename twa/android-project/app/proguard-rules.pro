@@ -1,0 +1,2 @@
+-keep class androidx.browser.** { *; }
+-keep class android.support.customtabs.** { *; }

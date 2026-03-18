@@ -161,6 +161,7 @@ export default function RootLayout({
       width: 512,
       height: 512,
     },
+    description: '오늘의 운세, 무료 사주풀이, 타로, 꿈해몽, 궁합 보기 무료, 토정비결 무료 - 띠별 운세와 별자리 운세를 매일 무료로 제공',
     sameAs: [],
   };
 
@@ -227,10 +228,10 @@ export default function RootLayout({
       },
       {
         '@type': 'Question',
-        name: '꿈해몽은 어떻게 하나요?',
+        name: '뱀꿈 해몽, 돈꿈 해몽은 어떻게 하나요?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: '운세미 꿈해몽에서 꿈에 등장한 키워드를 검색하면 해당 꿈의 의미와 길흉을 상세하게 알려드립니다.',
+          text: '운세미 꿈해몽에서 뱀꿈 해몽, 돈꿈 해몽 등 꿈에 등장한 키워드를 검색하면 유형별 상세 해석과 길흉을 알려드립니다. 3만 개 이상의 꿈해몽 DB를 보유하고 있습니다.',
         },
       },
       {

@@ -1,9 +1,5 @@
+// @ts-nocheck
 'use client';
-
-/**
- * 자체 광고 배너 (스텁)
- * 실제 구현은 빌드 시 _private/ 모듈로 대체됩니다.
- */
 
 import type { LocalAd } from '@/lib/ads/local-ads';
 
@@ -12,6 +8,10 @@ type LocalAdBannerProps = {
   variant?: 'inline' | 'banner' | 'native';
 };
 
-export default function LocalAdBanner(_props: LocalAdBannerProps) {
+let Impl: any = null;
+try { Impl = require('../../_private/ads/LocalAdBanner').default; } catch {}
+
+export default function LocalAdBanner(props: LocalAdBannerProps) {
+  if (Impl) return <Impl {...props} />;
   return null;
 }

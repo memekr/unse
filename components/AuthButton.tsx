@@ -1,11 +1,10 @@
+// @ts-nocheck
 'use client';
 
-/**
- * 로그인 버튼 (스텁)
- *
- * Google 로그인을 사용하려면 _private/auth/ 모듈을 설정하세요.
- */
+let Impl: any = null;
+try { Impl = require('../_private/auth/AuthButton').default; } catch {}
 
-export default function AuthButton() {
+export default function AuthButton(props: any) {
+  if (Impl) return <Impl {...props} />;
   return null;
 }

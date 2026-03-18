@@ -1,0 +1,5 @@
+# Vercel 배포 시 제외할 파일
+# 주의: _private/는 여기에 넣지 않음 (배포에 포함되어야 함)
+.git
+node_modules
+.next

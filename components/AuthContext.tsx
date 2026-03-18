@@ -1,10 +1,8 @@
+// @ts-nocheck
 'use client';
 
-/**
- * 인증 컨텍스트 (스텁)
- *
- * Google 로그인을 사용하려면 _private/auth/ 모듈을 설정하세요.
- */
+let PrivateModule: any = null;
+try { PrivateModule = require('../_private/auth/AuthContext'); } catch {}
 
 import { createContext, useContext, type ReactNode } from 'react';
 
@@ -45,22 +43,18 @@ const AuthContext = createContext<AuthContextType>({
   isConfigured: false,
 });
 
-export function useAuth() {
-  return useContext(AuthContext);
-}
+export const useAuth = PrivateModule?.useAuth ?? (() => useContext(AuthContext));
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  return (
-    <AuthContext.Provider value={{
-      user: null,
-      loading: false,
-      signInWithGoogle: async () => {},
-      signOutUser: async () => {},
-      saveResult: async () => {},
-      loadResults: async () => [],
-      isConfigured: false,
-    }}>
-      {children}
-    </AuthContext.Provider>
-  );
-}
+export const AuthProvider = PrivateModule?.AuthProvider ?? (({ children }: { children: ReactNode }) => (
+  <AuthContext.Provider value={{
+    user: null,
+    loading: false,
+    signInWithGoogle: async () => {},
+    signOutUser: async () => {},
+    saveResult: async () => {},
+    loadResults: async () => [],
+    isConfigured: false,
+  }}>
+    {children}
+  </AuthContext.Provider>
+));
