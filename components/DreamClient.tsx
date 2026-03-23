@@ -22,6 +22,7 @@ export default function DreamClient() {
   const [selectedKeywords, setSelectedKeywords] = useState<string[]>([]);
   const [showLotto, setShowLotto] = useState(false);
   const [shareMsg, setShareMsg] = useState('');
+  const [visibleCount, setVisibleCount] = useState(20);
 
   // URL 파라미터에서 검색어 복원
   useEffect(() => {
@@ -74,6 +75,7 @@ export default function DreamClient() {
 
   function handleCategoryClick(cat: string) {
     setCategory(cat);
+    setVisibleCount(20);
   }
 
   function toggleKeyword(keyword: string) {
@@ -101,7 +103,9 @@ export default function DreamClient() {
 
       <div className="dream-search">
         <form className="search-box" onSubmit={handleSearch}>
+          <label htmlFor="dream-search" className="label-desc" style={{ display: 'block', marginBottom: '0.375rem' }}>{'꿈 키워드 검색'}</label>
           <input
+            id="dream-search"
             type="text"
             className="form-input"
             placeholder={'꿈에 나온 키워드를 입력하세요 (예: 뱀, 물, 불...)'}
@@ -119,6 +123,7 @@ export default function DreamClient() {
               key={cat.value}
               className={`dream-tag ${category === cat.value ? 'active' : ''}`}
               onClick={() => handleCategoryClick(cat.value)}
+              aria-pressed={category === cat.value}
               style={
                 category === cat.value
                   ? { borderColor: 'var(--color-cta)', background: 'rgba(139, 92, 246, 0.12)', color: 'var(--color-text)' }
@@ -138,6 +143,7 @@ export default function DreamClient() {
         <button
           className="dream-tag"
           onClick={() => setShowLotto(!showLotto)}
+          aria-expanded={showLotto}
           style={{
             borderColor: 'var(--color-gold)',
             background: 'rgba(251, 191, 36, 0.1)',
@@ -218,32 +224,58 @@ export default function DreamClient() {
             {'검색 결과가 없습니다. 다른 키워드로 검색해보세요.'}
           </div>
         ) : (
-          results.map((dream) => (
-            <article key={dream.keyword} className="dream-item">
-              <h3>
-                <span>{dream.emoji}</span>
-                <span>{dream.keyword}{' 꿈'}</span>
-              </h3>
-              <p className="dream-meaning">{dream.meaning}</p>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
-                <span className="dream-lucky">
-                  {'\uD83C\uDFB2 행운의 숫자: '}{dream.luckyNumber}
-                </span>
-                <span style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  padding: '0.25rem 0.625rem',
-                  borderRadius: '9999px',
-                  background: 'rgba(139, 92, 246, 0.1)',
-                  color: 'var(--color-accent)',
-                  fontSize: '0.75rem',
-                  fontWeight: 600,
-                }}>
-                  {dream.category}
-                </span>
-              </div>
-            </article>
-          ))
+          <>
+            {results.slice(0, visibleCount).map((dream) => (
+              <article key={dream.keyword} className="dream-item">
+                <h3>
+                  <span>{dream.emoji}</span>
+                  <span>{dream.keyword}{' 꿈'}</span>
+                </h3>
+                <p className="dream-meaning">{dream.meaning}</p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
+                  <span className="dream-lucky">
+                    {'\uD83C\uDFB2 행운의 숫자: '}{dream.luckyNumber}
+                  </span>
+                  <span style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    padding: '0.25rem 0.625rem',
+                    borderRadius: '9999px',
+                    background: 'rgba(139, 92, 246, 0.1)',
+                    color: 'var(--color-accent)',
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                  }}>
+                    {dream.category}
+                  </span>
+                </div>
+              </article>
+            ))}
+
+            {/* 페이지네이션 */}
+            <div style={{ textAlign: 'center', padding: '1.5rem 0' }}>
+              <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-dim)', marginBottom: '0.75rem' }}>
+                {Math.min(visibleCount, results.length)}{' / '}{results.length}{'개 표시 중'}
+              </p>
+              {visibleCount < results.length && (
+                <button
+                  onClick={() => setVisibleCount(prev => prev + 20)}
+                  style={{
+                    padding: '0.625rem 1.5rem',
+                    borderRadius: '9999px',
+                    border: '1px solid var(--color-glass-border)',
+                    background: 'var(--color-glass)',
+                    color: 'var(--color-text)',
+                    fontSize: '0.875rem',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  {'더 보기'}
+                </button>
+              )}
+            </div>
+          </>
         )}
       </div>
 

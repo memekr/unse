@@ -1,11 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { siteConfig } from '@/lib/site-config';
 import AuthButton from './AuthButton';
-import PlayStoreBadge from './PlayStoreBadge';
 import { CrossSiteFooter } from './CrossSiteFooter';
 
 type SiteShellProps = {
@@ -18,34 +17,42 @@ type SiteShellProps = {
  * SiteShell — 공용 헤더/푸터/네비게이션
  */
 export default function SiteShell({ children, topBanner }: SiteShellProps) {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const closeMenu = useCallback(() => setMenuOpen(false), []);
+
+  // Close on Escape key
+  useEffect(() => {
+    if (!menuOpen) return;
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        setMenuOpen(false);
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [menuOpen]);
 
   return (
     <div className="site-shell">
-      {/* 상단 배너 */}
-      {topBanner && (
-        <div className="top-banner" role="banner">
-          {topBanner}
-        </div>
-      )}
+      {/* 상단 배너 제거됨 */}
 
       {/* 헤더 */}
       <header className="site-header" role="banner">
         <div className="site-header-inner">
           <Link href="/" className="brand-lockup" aria-label="운세미 홈으로 이동">
             <span className="brand-mark">{siteConfig.siteName}</span>
-            <span className="brand-tagline">unse.me</span>
           </Link>
 
-          {/* Mobile menu button */}
+          {/* Hamburger menu button — always visible */}
           <button
             className="mobile-menu-btn"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-label={mobileMenuOpen ? '메뉴 닫기' : '메뉴 열기'}
-            aria-expanded={mobileMenuOpen}
+            onClick={() => setMenuOpen(!menuOpen)}
+            aria-label={menuOpen ? '메뉴 닫기' : '메뉴 열기'}
+            aria-expanded={menuOpen}
             aria-controls="main-navigation"
           >
-            <span className={`hamburger ${mobileMenuOpen ? 'hamburger--open' : ''}`}>
+            <span className={`hamburger ${menuOpen ? 'hamburger--open' : ''}`}>
               <span></span>
               <span></span>
               <span></span>
@@ -54,7 +61,7 @@ export default function SiteShell({ children, topBanner }: SiteShellProps) {
 
           <nav
             id="main-navigation"
-            className={`header-nav ${mobileMenuOpen ? 'header-nav--open' : ''}`}
+            className={`header-nav ${menuOpen ? 'header-nav--open' : ''}`}
             aria-label="주요 메뉴"
           >
             {siteConfig.navigation.map((item) => (
@@ -62,41 +69,44 @@ export default function SiteShell({ children, topBanner }: SiteShellProps) {
                 key={item.href}
                 href={item.href}
                 className="header-nav-link"
-                onClick={() => setMobileMenuOpen(false)}
+                onClick={closeMenu}
               >
                 {item.label}
               </Link>
             ))}
+            <div className="header-nav-divider" role="separator" aria-hidden="true" />
+            <Link
+              href="/about"
+              className="header-nav-link"
+              onClick={closeMenu}
+            >
+              {'소개'}
+            </Link>
             <AuthButton />
           </nav>
         </div>
       </header>
 
+      {/* Menu overlay — close on background click */}
+      {menuOpen && (
+        <div
+          className="menu-overlay"
+          onClick={closeMenu}
+          aria-hidden="true"
+        />
+      )}
+
       {/* 메인 콘텐츠 */}
-      <main className="site-main" role="main">{children}</main>
+      <div className="site-main">{children}</div>
 
-      {/* 푸터 */}
-      <footer className="site-footer" role="contentinfo">
-        <div className="site-footer-inner">
-          <div className="footer-brand">
-            <strong>{siteConfig.siteName}</strong>
-            <p>{siteConfig.footerText}</p>
-          </div>
-          <nav className="footer-links" aria-label="서비스 메뉴">
-            {siteConfig.navigation.map((item) => (
-              <Link key={item.href} href={item.href}>
-                {item.label}
-              </Link>
-            ))}
-          </nav>
-          <div style={{ marginTop: '1rem' }}>
-            <PlayStoreBadge />
-          </div>
-        </div>
-      </footer>
-
-      {/* Cross-site footer */}
-      <CrossSiteFooter currentDomain="unse.me" companyName="운세미" />
+      {/* Cross-site footer (unified) */}
+      <CrossSiteFooter
+        currentDomain="unse.me"
+        companyName="운세미"
+        siteNavigation={siteConfig.navigation}
+        siteName={siteConfig.siteName}
+        showPlayStoreBadge
+      />
     </div>
   );
 }

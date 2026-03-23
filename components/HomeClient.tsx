@@ -17,6 +17,7 @@ import {
 import { analyzeAdvancedSaju, type AdvancedSajuResult } from '@/lib/saju-advanced';
 import ProductAdBanner from '@/components/ads/ProductAdBanner';
 import AppDownloadSection from '@/components/AppDownloadSection';
+import PushSubscribe from '@/components/PushSubscribe';
 
 function stars(n: number) {
   return '\u2B50'.repeat(n) + '\u2606'.repeat(5 - n);
@@ -108,7 +109,7 @@ export default function HomeClient() {
         const list = [p, ...saved.filter(s => s.name !== p.name)].slice(0, 5);
         localStorage.setItem('unse_profiles', JSON.stringify(list));
       } catch { /* */ }
-    }, 1200);
+    }, 300);
   }
 
   const today = new Date();
@@ -136,6 +137,8 @@ export default function HomeClient() {
           </p>
         </section>
 
+        <PushSubscribe />
+
         {/* Google 로그인 상태는 헤더의 AuthButton으로 이동됨 */}
 
         <form className="saju-form" onSubmit={handleSubmit} style={{ marginTop: '1.5rem' }}>
@@ -160,35 +163,38 @@ export default function HomeClient() {
           )}
 
           <div className="form-group">
-            <label>{'이름'}</label>
-            <input type="text" className="form-input" placeholder="이름을 입력하세요"
+            <label htmlFor="name-input">{'이름'}</label>
+            <input id="name-input" type="text" className="form-input" placeholder="이름을 입력하세요"
               value={name} onChange={e => setName(e.target.value)} required />
           </div>
 
           <div className="form-group">
-            <label>{'생년월일'}</label>
+            <label htmlFor="birth-input">{'생년월일'}</label>
             <span className="label-desc">{'양력 기준'}</span>
-            <input type="date" className="form-input"
+            <input id="birth-input" type="date" className="form-input"
               value={birthDate} onChange={e => setBirthDate(e.target.value)} required />
           </div>
 
           <div className="form-group">
-            <label>{'성별'}</label>
-            <div className="gender-buttons">
+            <label id="gender-label">{'성별'}</label>
+            <div className="gender-buttons" role="radiogroup" aria-labelledby="gender-label">
               <button type="button" className={`gender-btn ${gender === 'male' ? 'active' : ''}`}
+                role="radio" aria-checked={gender === 'male'}
                 onClick={() => setGender('male')}>{'남성'}</button>
               <button type="button" className={`gender-btn ${gender === 'female' ? 'active' : ''}`}
+                role="radio" aria-checked={gender === 'female'}
                 onClick={() => setGender('female')}>{'여성'}</button>
             </div>
           </div>
 
           <div className="form-group">
-            <label>{'태어난 시간'}</label>
+            <label id="birthtime-label">{'태어난 시간'}</label>
             <span className="label-desc">{'모르면 선택하지 않아도 됩니다'}</span>
-            <div className="time-select">
+            <div className="time-select" role="radiogroup" aria-labelledby="birthtime-label">
               {BIRTH_TIMES.map(t => (
                 <button key={t.value} type="button"
                   className={`time-btn ${birthTime === t.value ? 'active' : ''}`}
+                  role="radio" aria-checked={birthTime === t.value}
                   onClick={() => setBirthTime(birthTime === t.value ? -1 : t.value)}>
                   {t.label}
                 </button>
@@ -217,6 +223,8 @@ export default function HomeClient() {
               { href: '/saju', label: '\uD83C\uDFB4 사주풀이' },
               { href: '/tarot', label: '\uD83C\uDCCF 타로카드' },
               { href: '/dream', label: '\uD83D\uDCAD 꿈해몽' },
+              { href: '/compatibility', label: '\uD83D\uDC95 궁합' },
+              { href: '/tojeong', label: '\uD83D\uDCDC 토정비결' },
             ].map(s => (
               <Link key={s.href} href={s.href} style={{
                 padding: '0.5rem 1rem', borderRadius: '9999px',
@@ -279,7 +287,7 @@ export default function HomeClient() {
           {/* 종합 점수 */}
           <div style={{ margin: '1rem auto', maxWidth: '200px' }}>
             <div style={{ position: 'relative', width: '120px', height: '120px', margin: '0 auto 0.5rem' }}>
-              <svg viewBox="0 0 120 120" style={{ transform: 'rotate(-90deg)' }}>
+              <svg viewBox="0 0 120 120" style={{ transform: 'rotate(-90deg)' }} role="img" aria-label={`종합 점수 ${overallScore}점`}>
                 <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="10" />
                 <circle cx="60" cy="60" r="50" fill="none" stroke="var(--color-accent)" strokeWidth="10"
                   strokeDasharray={`${overallScore * 3.14} ${314 - overallScore * 3.14}`}
@@ -621,7 +629,7 @@ export default function HomeClient() {
               <tbody>
                 <tr>
                   <td style={{ padding: '0.375rem', color: 'var(--color-accent)', fontWeight: 600, fontSize: '0.6875rem' }}>{'십신'}</td>
-                  <td style={{ padding: '0.375rem', fontSize: '0.6875rem', color: 'var(--color-text-muted)' }}>{r.birthTime < 0 ? '-' : adv.tenGods.time.ko}</td>
+                  <td style={{ padding: '0.375rem', fontSize: '0.6875rem', color: 'var(--color-text-muted)' }}>{!adv.tenGods.time ? '-' : adv.tenGods.time.ko}</td>
                   <td style={{ padding: '0.375rem', fontSize: '0.6875rem', color: 'var(--color-gold)' }}>{'일간(나)'}</td>
                   <td style={{ padding: '0.375rem', fontSize: '0.6875rem', color: 'var(--color-text-muted)' }}>{adv.tenGods.month.ko}</td>
                   <td style={{ padding: '0.375rem', fontSize: '0.6875rem', color: 'var(--color-text-muted)' }}>{adv.tenGods.year.ko}</td>

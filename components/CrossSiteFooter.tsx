@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useMemo } from 'react';
+import PlayStoreBadge from './PlayStoreBadge';
 
 interface SiteLink {
   domain: string;
@@ -10,6 +11,11 @@ interface SiteLink {
   linkTo: string[];
 }
 
+interface NavItem {
+  href: string;
+  label: string;
+}
+
 interface FooterProps {
   currentDomain: string;
   year?: number;
@@ -17,6 +23,12 @@ interface FooterProps {
   showCategories?: boolean;
   maxLinks?: number;
   layout?: 'grid' | 'horizontal';
+  /** Site-specific navigation links to display */
+  siteNavigation?: NavItem[];
+  /** Site brand name for the footer brand block */
+  siteName?: string;
+  /** Show PlayStore badge */
+  showPlayStoreBadge?: boolean;
 }
 
 // Complete site network configuration
@@ -93,6 +105,9 @@ export function CrossSiteFooter({
   showCategories = true,
   maxLinks = 7,
   layout = 'grid',
+  siteNavigation,
+  siteName,
+  showPlayStoreBadge = false,
 }: FooterProps) {
   // Get sister sites for the current domain
   const sisterSites = useMemo(() => {
@@ -108,8 +123,31 @@ export function CrossSiteFooter({
   }
 
   return (
-    <footer className="cross-site-footer">
+    <footer className="cross-site-footer" role="contentinfo" aria-label="사이트 푸터">
       <div className="footer-container">
+        {/* Site Brand & Navigation */}
+        {siteName && (
+          <div className="footer-section">
+            <div className="footer-brand">
+              <strong>{siteName}</strong>
+            </div>
+            {siteNavigation && siteNavigation.length > 0 && (
+              <nav className="footer-nav" aria-label="서비스 메뉴">
+                {siteNavigation.map((item) => (
+                  <a key={item.href} href={item.href} className="footer-nav-link">
+                    {item.label}
+                  </a>
+                ))}
+              </nav>
+            )}
+            {showPlayStoreBadge && (
+              <div style={{ marginTop: '1rem' }}>
+                <PlayStoreBadge />
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Sister Sites Section */}
         <div className="footer-section">
           <h3 className="footer-section-title">관련 서비스</h3>
@@ -152,7 +190,7 @@ export function CrossSiteFooter({
 
       <style jsx>{`
         .cross-site-footer {
-          background-color: #1a1a1a;
+          background-color: var(--color-bg-card, #1a1a2e);
           color: #e0e0e0;
           padding: 3rem 1rem 1.5rem;
           margin-top: auto;
@@ -162,6 +200,34 @@ export function CrossSiteFooter({
         .footer-container {
           max-width: 1200px;
           margin: 0 auto;
+        }
+
+        .footer-brand {
+          margin-bottom: 1rem;
+        }
+
+        .footer-brand strong {
+          font-size: 1.1rem;
+          color: #ffffff;
+        }
+
+        .footer-nav {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.5rem 1rem;
+          margin-top: 0.75rem;
+        }
+
+        .footer-nav-link {
+          color: #c084fc;
+          text-decoration: none;
+          font-size: 0.85rem;
+          transition: color 0.2s ease;
+        }
+
+        .footer-nav-link:hover {
+          color: #d8b4fe;
+          text-decoration: underline;
         }
 
         .footer-section {
@@ -195,9 +261,9 @@ export function CrossSiteFooter({
           gap: 0.35rem;
           padding: 0.85rem 1.1rem;
           background-color: rgba(255, 255, 255, 0.05);
-          border: 1px solid rgba(100, 181, 246, 0.3);
+          border: 1px solid rgba(192, 132, 252, 0.3);
           border-radius: 6px;
-          color: #64b5f6;
+          color: #c084fc;
           text-decoration: none;
           transition: all 0.25s ease;
           font-size: 0.95rem;
@@ -205,12 +271,12 @@ export function CrossSiteFooter({
         }
 
         .footer-site-link:hover {
-          background-color: rgba(100, 181, 246, 0.1);
-          border-color: #64b5f6;
-          color: #90caf9;
+          background-color: rgba(192, 132, 252, 0.1);
+          border-color: #c084fc;
+          color: #d8b4fe;
           text-decoration: none;
           transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(100, 181, 246, 0.2);
+          box-shadow: 0 4px 12px rgba(192, 132, 252, 0.2);
         }
 
         .site-name {
@@ -220,7 +286,7 @@ export function CrossSiteFooter({
 
         .site-category {
           font-size: 0.8rem;
-          color: #90caf9;
+          color: #d8b4fe;
           opacity: 0.9;
         }
 
@@ -250,14 +316,14 @@ export function CrossSiteFooter({
         }
 
         .footer-legal a {
-          color: #64b5f6;
+          color: #c084fc;
           text-decoration: none;
           font-size: 0.85rem;
           transition: color 0.2s ease;
         }
 
         .footer-legal a:hover {
-          color: #90caf9;
+          color: #d8b4fe;
           text-decoration: underline;
         }
 

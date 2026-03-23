@@ -29,6 +29,12 @@ yarn-error.log*
 # private modules (광고 구현)
 /_private/
 
+# VAPID keys (secrets)
+vapid-keys.json
+
+# push subscription data
+data/push-subscriptions.json
+
 # vercel
 .vercel
 

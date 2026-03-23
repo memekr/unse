@@ -1,10 +1,11 @@
-// @ts-nocheck
 'use client';
 
-let Impl: any = null;
-try { Impl = require('../_private/auth/AuthButton').default; } catch {}
+import type { ComponentType } from 'react';
 
-export default function AuthButton(props: any) {
-  if (Impl) return <Impl {...props} />;
+let Impl: ComponentType<Record<string, never>> | null = null;
+try { Impl = require('../_private/auth/AuthButton').default; } catch { /* private module not available */ }
+
+export default function AuthButton() {
+  if (Impl) return <Impl />;
   return null;
 }

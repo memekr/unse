@@ -1,6 +1,6 @@
-// @ts-nocheck
 'use client';
 
+import type { ComponentType } from 'react';
 import type { LocalAd } from '@/lib/ads/local-ads';
 
 type LocalAdBannerProps = {
@@ -8,8 +8,8 @@ type LocalAdBannerProps = {
   variant?: 'inline' | 'banner' | 'native';
 };
 
-let Impl: any = null;
-try { Impl = require('../../_private/ads/LocalAdBanner').default; } catch {}
+let Impl: ComponentType<LocalAdBannerProps> | null = null;
+try { Impl = require('../../_private/ads/LocalAdBanner').default; } catch { /* private module not available */ }
 
 export default function LocalAdBanner(props: LocalAdBannerProps) {
   if (Impl) return <Impl {...props} />;

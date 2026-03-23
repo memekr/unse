@@ -1,13 +1,17 @@
-// @ts-nocheck
 /**
  * 상품 추천 API
  * _private/ 모듈이 있으면 실제 구현, 없으면 빈 배열
  */
 import { NextRequest, NextResponse } from 'next/server';
 
-let handler: any;
+type RouteHandler = {
+  POST?: (req: NextRequest) => Promise<NextResponse> | NextResponse;
+  GET?: (req: NextRequest) => Promise<NextResponse> | NextResponse;
+};
+
+let handler: RouteHandler | null = null;
 try {
-  handler = require('../../../_private/ads/products-handler');
+  handler = require('../../../_private/ads/products-handler') as RouteHandler;
 } catch {
   handler = null;
 }

@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client';
 
 /**
@@ -6,6 +5,7 @@
  * _private/ 존재 시 실제 구현 로드, 없으면 null
  */
 
+import type { ComponentType } from 'react';
 import type { FortuneContext } from '@/lib/ads/types';
 
 type Props = {
@@ -17,10 +17,10 @@ type Props = {
 
 export type { FortuneContext };
 
-let Impl: any = null;
+let Impl: ComponentType<Props> | null = null;
 try {
   Impl = require('../../_private/ads/ProductAdBanner').default;
-} catch {}
+} catch { /* private module not available */ }
 
 export default function ProductAdBanner(props: Props) {
   if (Impl) return <Impl {...props} />;

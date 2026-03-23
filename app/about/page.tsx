@@ -5,6 +5,7 @@ export const metadata: Metadata = {
   description: '운세미는 AI 기반 무료 운세 서비스입니다. 사주풀이, 타로, 꿈해몽, 별자리 운세를 무료로 제공합니다.',
   alternates: {
     canonical: 'https://unse.me/about',
+    languages: { 'ko-KR': 'https://unse.me/about' },
   },
 };
 

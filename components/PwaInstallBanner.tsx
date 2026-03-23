@@ -37,7 +37,7 @@ export function PwaInstallBanner() {
   }
 
   return (
-    <div style={{ position: 'fixed', bottom: 16, left: 16, right: 16, zIndex: 50, maxWidth: 400, margin: '0 auto', borderRadius: 16, border: '1px solid rgba(255,255,255,0.08)', background: '#1a1a1a', padding: 16, boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }} role="banner" aria-label="앱 설치">
+    <div style={{ position: 'fixed', bottom: 16, left: 16, right: 16, zIndex: 50, maxWidth: 400, margin: '0 auto', borderRadius: 16, border: '1px solid rgba(255,255,255,0.08)', background: '#1a1a1a', padding: 16, boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }} role="dialog" aria-label="앱 설치 안내">
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
         <div style={{ flexShrink: 0, width: 36, height: 36, borderRadius: 10, background: 'rgba(239, 68, 68, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ef4444', fontSize: 18 }} aria-hidden="true">+</div>
         <div style={{ flex: 1 }}>

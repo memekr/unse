@@ -2,11 +2,12 @@ import type { Metadata } from 'next';
 import SajuClient from '@/components/SajuClient';
 
 export const metadata: Metadata = {
-  title: '사주풀이 - 생년월일로 보는 나의 사주팔자 | 운세미',
+  title: '사주풀이 - 생년월일로 보는 나의 사주팔자',
   description: '무료 사주풀이. 생년월일시를 입력하면 AI가 분석하는 정확한 사주팔자, 오행 분석, 운세를 확인하세요.',
   keywords: ['사주풀이', '사주팔자', '무료사주', '생년월일 운세', '오행'],
   alternates: {
     canonical: 'https://unse.me/saju',
+    languages: { 'ko-KR': 'https://unse.me/saju' },
   },
 };
 

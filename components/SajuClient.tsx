@@ -86,7 +86,7 @@ export default function SajuClient() {
       const params = new URLSearchParams({ birth, gender });
       if (birthTime >= 0) params.set('time', String(birthTime));
       window.history.replaceState(null, '', `/saju?${params.toString()}`);
-    }, 1000);
+    }, 300);
   }
 
   return (
@@ -99,9 +99,10 @@ export default function SajuClient() {
 
       <form className="saju-form" onSubmit={handleSubmit}>
         <div className="form-group">
-          <label>{'생년월일'}</label>
+          <label htmlFor="saju-birth-input">{'생년월일'}</label>
           <span className="label-desc">{'양력 기준으로 입력해주세요'}</span>
           <input
+            id="saju-birth-input"
             type="date"
             className="form-input"
             value={birthDate}
@@ -111,11 +112,13 @@ export default function SajuClient() {
         </div>
 
         <div className="form-group">
-          <label>{'성별'}</label>
-          <div className="gender-buttons">
+          <label id="saju-gender-label">{'성별'}</label>
+          <div className="gender-buttons" role="radiogroup" aria-labelledby="saju-gender-label">
             <button
               type="button"
               className={`gender-btn ${gender === 'male' ? 'active' : ''}`}
+              role="radio"
+              aria-checked={gender === 'male'}
               onClick={() => setGender('male')}
             >
               {'남성'}
@@ -123,6 +126,8 @@ export default function SajuClient() {
             <button
               type="button"
               className={`gender-btn ${gender === 'female' ? 'active' : ''}`}
+              role="radio"
+              aria-checked={gender === 'female'}
               onClick={() => setGender('female')}
             >
               {'여성'}
@@ -131,14 +136,16 @@ export default function SajuClient() {
         </div>
 
         <div className="form-group">
-          <label>{'태어난 시간'}</label>
+          <label id="saju-birthtime-label">{'태어난 시간'}</label>
           <span className="label-desc">{'모르면 선택하지 않아도 됩니다'}</span>
-          <div className="time-select">
+          <div className="time-select" role="radiogroup" aria-labelledby="saju-birthtime-label">
             {BIRTH_TIMES.map((time) => (
               <button
                 key={time.value}
                 type="button"
                 className={`time-btn ${birthTime === time.value ? 'active' : ''}`}
+                role="radio"
+                aria-checked={birthTime === time.value}
                 onClick={() => setBirthTime(birthTime === time.value ? -1 : time.value)}
               >
                 {time.label}
@@ -153,7 +160,7 @@ export default function SajuClient() {
       </form>
 
       {loading && (
-        <div className="loading-spinner">
+        <div className="loading-spinner" role="status">
           <span className="spinner" />
           <span>{'만세력 기반으로 사주를 분석하고 있습니다...'}</span>
         </div>
@@ -161,7 +168,7 @@ export default function SajuClient() {
 
       {result && !loading && (
         <>
-          <div className="result-panel">
+          <div className="result-panel" aria-live="polite">
             <h2>{'\uD83C\uDFB4 사주팔자 분석 결과'}</h2>
 
             {/* 사주 4주 표시 */}

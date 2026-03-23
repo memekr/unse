@@ -254,7 +254,7 @@ export const MAJOR_ARCANA = [
     careerReversed: '번아웃에 주의하세요. 적절한 휴식이 필요합니다.',
   },
   {
-    id: 4, name: 'The Emperor', nameKo: '황제', emoji: '\uD83D\uDC4E',
+    id: 4, name: 'The Emperor', nameKo: '황제', emoji: '\uD83C\uDFDB\uFE0F',
     uprightKeywords: '권위, 구조, 안정, 리더십, 책임감',
     reversedKeywords: '독재, 경직성, 통제 불능, 미성숙',
     uprightMeaning: '질서와 안정의 에너지가 강한 시기입니다. 체계적인 접근과 리더십으로 목표를 달성할 수 있습니다.',
@@ -411,7 +411,7 @@ export const MAJOR_ARCANA = [
   },
   {
     id: 16, name: 'The Tower', nameKo: '탑', emoji: '\uD83D\uDDFC',
-    uprightKeywords: '급변, 혼실, 계시, 해체, 재건',
+    uprightKeywords: '급변, 혼란, 계시, 해체, 재건',
     reversedKeywords: '변화에 대한 공포, 회피, 지연된 변화',
     uprightMeaning: '갑작스러운 변화가 찾아올 수 있지만, 이는 더 나은 것을 위한 파괴입니다. 무너진 것 위에 더 단단한 것을 세울 수 있습니다.',
     reversedMeaning: '필요한 변화를 회피하고 있습니다. 더 늦기 전에 직면할 용기가 필요합니다.',

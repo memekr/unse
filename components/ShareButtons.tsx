@@ -30,11 +30,6 @@ export function ShareButtons({ url, title }: ShareButtonsProps) {
     }
   }
 
-  function shareKakao() {
-    const kakaoUrl = `https://story.kakao.com/share?url=${encodeURIComponent(shareUrl)}`;
-    window.open(kakaoUrl, '_blank', 'width=600,height=400,noopener,noreferrer');
-  }
-
   function shareTwitter() {
     const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareTitle)}&url=${encodeURIComponent(shareUrl)}`;
     window.open(twitterUrl, '_blank', 'width=600,height=400,noopener,noreferrer');
@@ -43,13 +38,6 @@ export function ShareButtons({ url, title }: ShareButtonsProps) {
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.5rem', padding: '1rem 0' }} role="group" aria-label="공유 버튼">
       <span style={{ fontSize: '0.8125rem', fontWeight: 500, color: '#666', marginRight: '0.25rem' }}>공유</span>
-      <button
-        onClick={shareKakao}
-        style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', borderRadius: '9999px', border: '1px solid rgba(234, 179, 8, 0.2)', background: 'rgba(234, 179, 8, 0.1)', padding: '0.5rem 1rem', fontSize: '0.875rem', fontWeight: 500, color: '#facc15', cursor: 'pointer', minHeight: '44px', minWidth: '44px', justifyContent: 'center' }}
-        aria-label="카카오톡으로 공유"
-      >
-        카카오톡
-      </button>
       <button
         onClick={shareTwitter}
         style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', borderRadius: '9999px', border: '1px solid rgba(56, 189, 248, 0.2)', background: 'rgba(56, 189, 248, 0.1)', padding: '0.5rem 1rem', fontSize: '0.875rem', fontWeight: 500, color: '#38bdf8', cursor: 'pointer', minHeight: '44px', minWidth: '44px', justifyContent: 'center' }}

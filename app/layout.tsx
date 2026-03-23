@@ -113,6 +113,7 @@ export const metadata: Metadata = {
     title: siteTitle,
     description: siteDescription,
     images: ['/og-image.png'],
+    site: '@unse_me',
     creator: '@unse_me',
   },
   verification: {
@@ -162,7 +163,7 @@ export default function RootLayout({
       height: 512,
     },
     description: '오늘의 운세, 무료 사주풀이, 타로, 꿈해몽, 궁합 보기 무료, 토정비결 무료 - 띠별 운세와 별자리 운세를 매일 무료로 제공',
-    sameAs: [],
+    sameAs: ['https://x.com/unse_me'],
   };
 
   const breadcrumbJsonLd = {
@@ -190,11 +191,6 @@ export default function RootLayout({
       '@type': 'Offer',
       price: '0',
       priceCurrency: 'KRW',
-    },
-    aggregateRating: {
-      '@type': 'AggregateRating',
-      ratingValue: '4.5',
-      ratingCount: '120',
     },
   };
 
@@ -231,7 +227,7 @@ export default function RootLayout({
         name: '뱀꿈 해몽, 돈꿈 해몽은 어떻게 하나요?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: '운세미 꿈해몽에서 뱀꿈 해몽, 돈꿈 해몽 등 꿈에 등장한 키워드를 검색하면 유형별 상세 해석과 길흉을 알려드립니다. 3만 개 이상의 꿈해몽 DB를 보유하고 있습니다.',
+          text: '운세미 꿈해몽에서 뱀꿈 해몽, 돈꿈 해몽 등 꿈에 등장한 키워드를 검색하면 유형별 상세 해석과 길흉을 알려드립니다. 179개 꿈해몽 DB와 64개 상세 해석 페이지를 보유하고 있습니다.',
         },
       },
       {
@@ -264,7 +260,10 @@ export default function RootLayout({
   return (
     <html lang="ko" className={notoSansKr.className}>
       <head>
-        <meta name="theme-color" content="#0D0A1A" />
+        <link
+          rel="stylesheet"
+          href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css"
+        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
@@ -287,16 +286,16 @@ export default function RootLayout({
         />
       </head>
       <body>
-        <AppSmartBanner />
         <a href="#main-content" className="skip-to-content" aria-label="본문으로 바로 이동">본문으로 이동</a>
+        <AppSmartBanner />
         <GoogleAnalytics />
         <AuthProvider>
         <SiteShell topBanner={`${siteName} - 무료 운세 서비스`}>
-          <div id="main-content">
+          <main id="main-content">
             {children}
-          </div>
+          </main>
         </SiteShell>
-        <p style={{ fontSize: '10px', color: '#9ca3af', opacity: 0.6, textAlign: 'center', padding: '8px 16px' }}>
+        <p style={{ fontSize: '11px', color: '#9ca3af', opacity: 0.7, textAlign: 'center', padding: '8px 16px' }}>
           본 사이트의 일부 링크는 제휴 마케팅 링크로, 이를 통한 구매 시 사이트 운영에 도움이 되는 소정의 수수료를 받을 수 있습니다.
         </p>
         </AuthProvider>
@@ -306,9 +305,7 @@ export default function RootLayout({
             __html: `
               if ('serviceWorker' in navigator) {
                 window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js')
-                    .then(function(reg) { console.log('SW registered:', reg.scope); })
-                    .catch(function(err) { console.log('SW registration failed:', err); });
+                  navigator.serviceWorker.register('/sw.js').catch(function() {});
                 });
               }
             `,

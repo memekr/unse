@@ -1,10 +1,14 @@
-// @ts-nocheck
 'use client';
 
-let PrivateModule: any = null;
-try { PrivateModule = require('../_private/auth/AuthContext'); } catch {}
-
 import { createContext, useContext, type ReactNode } from 'react';
+
+type PrivateAuthModule = {
+  useAuth: () => AuthContextType;
+  AuthProvider: (props: { children: ReactNode }) => React.JSX.Element;
+};
+
+let PrivateModule: PrivateAuthModule | null = null;
+try { PrivateModule = require('../_private/auth/AuthContext') as PrivateAuthModule; } catch { /* private module not available */ }
 
 type AuthUser = {
   uid: string;
@@ -43,9 +47,9 @@ const AuthContext = createContext<AuthContextType>({
   isConfigured: false,
 });
 
-export const useAuth = PrivateModule?.useAuth ?? (() => useContext(AuthContext));
+export const useAuth: () => AuthContextType = PrivateModule?.useAuth ?? (() => useContext(AuthContext));
 
-export const AuthProvider = PrivateModule?.AuthProvider ?? (({ children }: { children: ReactNode }) => (
+export const AuthProvider: (props: { children: ReactNode }) => React.JSX.Element = PrivateModule?.AuthProvider ?? (({ children }: { children: ReactNode }) => (
   <AuthContext.Provider value={{
     user: null,
     loading: false,

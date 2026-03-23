@@ -36,7 +36,11 @@ export default function TarotClient() {
   const [flippingIndex, setFlippingIndex] = useState<number | null>(null);
 
   const shuffleDeck = useCallback(() => {
-    const shuffled = [...MAJOR_ARCANA].sort(() => Math.random() - 0.5);
+    const shuffled = [...MAJOR_ARCANA];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
     setShuffledDeck(shuffled);
     setSelectedCards([]);
     setRevealedIndices(new Set());
@@ -131,6 +135,7 @@ export default function TarotClient() {
                   key={cat.value}
                   className={`dream-tag ${category === cat.value ? 'active' : ''}`}
                   onClick={() => setCategory(cat.value)}
+                  aria-pressed={category === cat.value}
                   style={
                     category === cat.value
                       ? { borderColor: 'var(--color-cta)', background: 'rgba(139, 92, 246, 0.12)', color: 'var(--color-text)' }
@@ -157,10 +162,13 @@ export default function TarotClient() {
             {/* 카드 덱 */}
             <div className="tarot-deck">
               {shuffledDeck.map((card, i) => (
-                <div
+                <button
                   key={card.id}
+                  type="button"
                   className={`tarot-card-slot ${revealedIndices.has(i) ? 'revealed' : ''} ${flippingIndex === i ? 'flipping' : ''}`}
                   onClick={() => selectCard(i)}
+                  aria-label={revealedIndices.has(i) ? `${card.nameKo} 카드` : `타로 카드 ${i + 1}번 선택`}
+                  disabled={revealedIndices.has(i) || selectedCards.length >= 3}
                 >
                   {revealedIndices.has(i) ? (
                     <div className="card-face">
@@ -177,7 +185,7 @@ export default function TarotClient() {
                   ) : (
                     <span className="card-back">{'\u2728'}</span>
                   )}
-                </div>
+                </button>
               ))}
             </div>
 
@@ -216,7 +224,7 @@ export default function TarotClient() {
 
             {/* 종합 해석 */}
             {showResult && (
-              <div className="result-panel" style={{ maxWidth: '36rem', width: '100%' }}>
+              <div className="result-panel" style={{ maxWidth: '36rem', width: '100%' }} aria-live="polite">
                 <h2>{'타로 종합 해석'}</h2>
                 <div className="result-content">
                   <p>{generateSynthesis()}</p>

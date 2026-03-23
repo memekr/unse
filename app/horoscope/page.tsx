@@ -19,6 +19,7 @@ export const metadata: Metadata = buildMetadata({
   },
   alternates: {
     canonical: 'https://unse.me/horoscope',
+    languages: { 'ko-KR': 'https://unse.me/horoscope' },
   },
 });
 

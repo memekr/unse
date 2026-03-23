@@ -70,6 +70,8 @@ export const siteConfig: SiteConfig = {
     { href: '/saju', label: '사주풀이' },
     { href: '/tarot', label: '타로카드' },
     { href: '/dream', label: '꿈해몽' },
+    { href: '/compatibility', label: '궁합' },
+    { href: '/tojeong', label: '토정비결' },
   ],
   gaId: process.env.NEXT_PUBLIC_GA_ID ?? '',
   naverVerification: process.env.NEXT_PUBLIC_NAVER_VERIFICATION ?? '',

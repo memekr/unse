@@ -263,7 +263,7 @@ export function analyzeSinsal(pillars: Pillar[]): SinsalInfo[] {
   }
 
   // 공망 (空亡) - 갑자순 기준
-  const gapjaIdx = (pillars[2].stem + pillars[2].branch * 5) % 60; // 간략 계산
+  const gapjaIdx = ((6 * pillars[2].stem - 5 * pillars[2].branch) % 60 + 60) % 60;
   const cycleStart = Math.floor(gapjaIdx / 10) * 10;
   const gongmang1 = (cycleStart + 10) % 12;
   const gongmang2 = (cycleStart + 11) % 12;
@@ -306,7 +306,7 @@ const YUKAP: [number, number][] = [[0,1],[2,11],[3,10],[4,9],[5,8],[6,7]];
 // 충 (沖)
 const CHUNG: [number, number][] = [[0,6],[1,7],[2,8],[3,9],[4,10],[5,11]];
 // 형 (刑)
-const HYUNG: [number, number][] = [[2,5],[5,8],[8,2],[1,10],[10,7],[7,1],[4,4],[6,6],[9,9],[11,11]];
+const HYUNG: [number, number][] = [[2,5],[5,8],[8,2],[1,10],[10,7],[7,1],[0,3],[3,0],[4,4],[6,6],[9,9],[11,11]];
 // 해 (害)
 const HAE: [number, number][] = [[0,7],[1,6],[2,5],[3,4],[8,11],[9,10]];
 
@@ -398,6 +398,8 @@ export function calculateDaeun(
   saju: SajuResult,
   gender: string,
   birthYear: number,
+  birthMonth: number = 1,
+  birthDay: number = 1,
 ): DaeunCycle[] {
   const yearStemYang = saju.yearPillar.stem % 2 === 0;
   const isMale = gender === 'male';
@@ -407,8 +409,24 @@ export function calculateDaeun(
   const monthBranch = saju.monthPillar.branch;
   const dayMaster = saju.dayPillar.stem;
 
-  // 대운 시작 나이 (간략: 통상 3~8세 사이, 여기서는 간략하게 계산)
-  const startAge = (birthYear % 3) + 3; // 간략 근사
+  // 대운 시작 나이: 생일 → 다음(순행)/이전(역행) 절기까지 일수 ÷ 3
+  const JEOLGI_DATES = [
+    [2, 4], [3, 6], [4, 5], [5, 6], [6, 6], [7, 7],
+    [8, 7], [9, 8], [10, 8], [11, 7], [12, 7], [1, 6],
+  ]; // 입춘~소한 절기 시작일 (양력 근사)
+
+  let minDays = 365;
+  const birthDate = new Date(birthYear, birthMonth - 1, birthDay);
+  for (const [jm, jd] of JEOLGI_DATES) {
+    // 같은 해 + 다음 해 절기 모두 확인
+    for (const yOffset of [0, 1, -1]) {
+      const jeolgiDate = new Date(birthYear + yOffset, jm - 1, jd);
+      const diff = Math.round((jeolgiDate.getTime() - birthDate.getTime()) / 86400000);
+      if (isForward && diff > 0 && diff < minDays) minDays = diff;
+      if (!isForward && diff < 0 && Math.abs(diff) < minDays) minDays = Math.abs(diff);
+    }
+  }
+  const startAge = Math.max(1, Math.round(minDays / 3));
 
   const cycles: DaeunCycle[] = [];
   for (let i = 0; i < 8; i++) {
@@ -747,7 +765,7 @@ export type AdvancedSajuResult = {
     year: TenGodInfo;
     month: TenGodInfo;
     day: TenGodInfo; // 비견 (자기자신)
-    time: TenGodInfo;
+    time: TenGodInfo | null;
   };
   // 각 주의 12운성
   twelveStages: {
@@ -780,16 +798,17 @@ export function analyzeAdvancedSaju(
   birthTime: number,
 ): AdvancedSajuResult {
   const dayMaster = saju.dayPillar.stem;
-  const pillars = birthTime >= 0
+  const hasTime = birthTime >= 0;
+  const pillars = hasTime
     ? [saju.yearPillar, saju.monthPillar, saju.dayPillar, saju.timePillar]
-    : [saju.yearPillar, saju.monthPillar, saju.dayPillar, saju.timePillar];
+    : [saju.yearPillar, saju.monthPillar, saju.dayPillar];
 
   // 십신
   const tenGods = {
     year: getTenGodInfo(dayMaster, saju.yearPillar.stem),
     month: getTenGodInfo(dayMaster, saju.monthPillar.stem),
     day: { index: 0, hanja: '比肩', ko: '비견 (본인)', meaning: '자기 자신, 일간의 기준점' },
-    time: getTenGodInfo(dayMaster, saju.timePillar.stem),
+    time: hasTime ? getTenGodInfo(dayMaster, saju.timePillar.stem) : null,
   };
 
   // 12운성

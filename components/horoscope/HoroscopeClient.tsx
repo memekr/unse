@@ -94,28 +94,19 @@ export default function HoroscopeClient({
   // 상세 뷰
   if (selectedZodiac) {
     const z = selectedZodiac;
+    const scoreBadgeBg = z.overall >= 4 ? 'rgba(52,211,153,0.15)' : z.overall >= 3 ? 'rgba(96,165,250,0.15)' : 'rgba(248,113,113,0.15)';
+    const scoreBadgeBorder = z.overall >= 4 ? 'rgba(52,211,153,0.3)' : z.overall >= 3 ? 'rgba(96,165,250,0.3)' : 'rgba(248,113,113,0.3)';
+    const scoreColor = z.overall >= 4 ? '#34d399' : z.overall >= 3 ? '#60a5fa' : '#f87171';
+
     return (
       <div ref={detailRef}>
         {/* 뒤로가기 */}
-        <button
-          onClick={() => setSelected(null)}
-          style={{
-            display: 'inline-flex', alignItems: 'center', gap: '0.375rem',
-            padding: '0.5rem 1rem', borderRadius: '9999px',
-            background: 'var(--color-glass)', border: '1px solid var(--color-border)',
-            color: 'var(--color-text-muted)', fontSize: '0.875rem', cursor: 'pointer',
-            marginBottom: '1.25rem', transition: 'all 0.2s',
-          }}
-        >
+        <button onClick={() => setSelected(null)} className="horoscope-back-btn">
           ← 전체 별자리
         </button>
 
         {/* 헤더 */}
-        <div style={{
-          textAlign: 'center', padding: '2rem 1rem', borderRadius: 'var(--radius-lg)',
-          background: 'var(--gradient-card)', border: '1px solid var(--color-glass-border)',
-          marginBottom: '1rem',
-        }}>
+        <div className="horoscope-detail-header">
           <div style={{ fontSize: '3rem', marginBottom: '0.75rem' }}>{z.icon}</div>
           <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--color-text)' }}>
             {z.name} 오늘의 운세
@@ -126,35 +117,26 @@ export default function HoroscopeClient({
           <div style={{
             display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
             marginTop: '0.75rem', padding: '0.375rem 0.875rem', borderRadius: '9999px',
-            background: z.overall >= 4 ? 'rgba(52,211,153,0.15)' : z.overall >= 3 ? 'rgba(96,165,250,0.15)' : 'rgba(248,113,113,0.15)',
-            border: `1px solid ${z.overall >= 4 ? 'rgba(52,211,153,0.3)' : z.overall >= 3 ? 'rgba(96,165,250,0.3)' : 'rgba(248,113,113,0.3)'}`,
+            background: scoreBadgeBg, border: `1px solid ${scoreBadgeBorder}`,
           }}>
             <span style={{ fontSize: '0.8125rem' }}>{renderStars(z.overall)}</span>
-            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: z.overall >= 4 ? '#34d399' : z.overall >= 3 ? '#60a5fa' : '#f87171' }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: scoreColor }}>
               {z.overall * 20}점
             </span>
           </div>
         </div>
 
         {/* 종합운 */}
-        <section style={{
-          padding: '1.25rem', borderRadius: 'var(--radius-lg)',
-          background: 'var(--color-bg-card)', border: '1px solid var(--color-glass-border)',
-          marginBottom: '1rem',
-        }}>
-          <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.75rem' }}>✨ 오늘의 운세</h3>
+        <section className="horoscope-section">
+          <h3 className="horoscope-section-title">✨ 오늘의 운세</h3>
           <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', lineHeight: 1.8 }}>
             {z.fortuneText}
           </p>
         </section>
 
         {/* 운세 세부 항목 */}
-        <section style={{
-          padding: '1.25rem', borderRadius: 'var(--radius-lg)',
-          background: 'var(--color-bg-card)', border: '1px solid var(--color-glass-border)',
-          marginBottom: '1rem',
-        }}>
-          <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '1rem' }}>📊 세부 운세</h3>
+        <section className="horoscope-section">
+          <h3 className="horoscope-section-title" style={{ marginBottom: '1rem' }}>📊 세부 운세</h3>
 
           {[
             { label: '종합운', text: z.overallText, score: z.overall, color: '#a78bfa', icon: '🌟' },
@@ -162,15 +144,8 @@ export default function HoroscopeClient({
             { label: '금전운', text: z.moneyText, score: z.money, color: '#fbbf24', icon: '💰' },
             { label: '건강운', text: z.healthText, score: z.health, color: '#34d399', icon: '💚' },
           ].map((item, i) => (
-            <div key={i} style={{
-              padding: '0.875rem', borderRadius: 'var(--radius-sm)',
-              background: 'var(--color-glass)', marginBottom: '0.625rem',
-              borderLeft: `3px solid ${item.color}`,
-            }}>
-              <div style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                marginBottom: '0.5rem',
-              }}>
+            <div key={i} className="horoscope-detail-item" style={{ borderLeft: `3px solid ${item.color}` }}>
+              <div className="horoscope-detail-item-header">
                 <span style={{ fontSize: '0.875rem', fontWeight: 700, color: item.color }}>
                   {item.icon} {item.label}
                 </span>
@@ -190,19 +165,10 @@ export default function HoroscopeClient({
         </section>
 
         {/* 행운 정보 */}
-        <section style={{
-          padding: '1.25rem', borderRadius: 'var(--radius-lg)',
-          background: 'var(--color-bg-card)', border: '1px solid var(--color-glass-border)',
-          marginBottom: '1rem',
-        }}>
-          <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.75rem' }}>🍀 행운 정보</h3>
-          <div style={{
-            display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.625rem',
-          }}>
-            <div style={{
-              padding: '0.75rem', borderRadius: 'var(--radius-sm)',
-              background: 'var(--color-glass)', textAlign: 'center',
-            }}>
+        <section className="horoscope-section">
+          <h3 className="horoscope-section-title">🍀 행운 정보</h3>
+          <div className="horoscope-lucky-grid">
+            <div className="horoscope-lucky-item">
               <div style={{ fontSize: '0.6875rem', color: 'var(--color-text-dim)', marginBottom: '0.25rem' }}>
                 🌈 행운의 색
               </div>
@@ -210,10 +176,7 @@ export default function HoroscopeClient({
                 {z.luckyColor}
               </div>
             </div>
-            <div style={{
-              padding: '0.75rem', borderRadius: 'var(--radius-sm)',
-              background: 'var(--color-glass)', textAlign: 'center',
-            }}>
+            <div className="horoscope-lucky-item">
               <div style={{ fontSize: '0.6875rem', color: 'var(--color-text-dim)', marginBottom: '0.25rem' }}>
                 🎲 행운의 숫자
               </div>
@@ -225,12 +188,7 @@ export default function HoroscopeClient({
         </section>
 
         {/* 오늘의 조언 */}
-        <section style={{
-          padding: '1.25rem', borderRadius: 'var(--radius-lg)',
-          background: 'linear-gradient(135deg, rgba(139,92,246,0.08), rgba(99,102,241,0.08))',
-          border: '1px solid var(--color-glass-border)',
-          marginBottom: '1rem', textAlign: 'center',
-        }}>
+        <section className="horoscope-advice">
           <div style={{ fontSize: '0.6875rem', color: 'var(--color-text-dim)', marginBottom: '0.5rem' }}>
             💫 오늘의 한마디
           </div>
@@ -244,16 +202,7 @@ export default function HoroscopeClient({
 
         {/* 공유하기 버튼 */}
         <div style={{ textAlign: 'center', margin: '1rem 0' }}>
-          <button
-            onClick={handleShare}
-            style={{
-              display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
-              padding: '0.75rem 1.5rem', borderRadius: '9999px',
-              background: 'var(--gradient-primary)', color: '#fff',
-              fontWeight: 700, fontSize: '0.875rem', cursor: 'pointer',
-              border: 'none', boxShadow: '0 2px 8px var(--color-cta-glow)',
-            }}
-          >
+          <button onClick={handleShare} className="horoscope-share-btn">
             {'\uD83D\uDD17 결과 공유하기'}
           </button>
           {shareMsg && (
@@ -272,25 +221,16 @@ export default function HoroscopeClient({
         />
 
         {/* 다른 별자리 둘러보기 */}
-        <section style={{
-          padding: '1.25rem', borderRadius: 'var(--radius-lg)',
-          background: 'var(--color-bg-card)', border: '1px solid var(--color-glass-border)',
-          marginTop: '1rem',
-        }}>
+        <section className="horoscope-section" style={{ marginTop: '1rem' }}>
           <h3 style={{ fontSize: '0.875rem', fontWeight: 700, marginBottom: '0.75rem', textAlign: 'center' }}>
             다른 별자리 운세 보기
           </h3>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', justifyContent: 'center' }}>
+          <div className="horoscope-other-signs">
             {fortunes.filter(f => f.slug !== z.slug).map((f) => (
               <button
                 key={f.slug}
                 onClick={() => setSelected(f.slug)}
-                style={{
-                  padding: '0.375rem 0.75rem', borderRadius: '9999px',
-                  background: 'var(--color-glass)', border: '1px solid var(--color-border)',
-                  color: 'var(--color-text-muted)', fontSize: '0.8125rem', cursor: 'pointer',
-                  transition: 'all 0.2s',
-                }}
+                className="horoscope-sign-btn"
               >
                 {f.icon} {f.name}
               </button>

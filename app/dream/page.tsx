@@ -2,11 +2,12 @@ import type { Metadata } from 'next';
 import DreamClient from '@/components/DreamClient';
 
 export const metadata: Metadata = {
-  title: '꿈해몽 - 꿈 해석 사전 | 운세미',
+  title: '꿈해몽 - 꿈 해석 사전',
   description: '무료 꿈해몽 사전. 간밤에 꾼 꿈의 의미를 검색해보세요. 동물, 자연, 사람, 사물, 상황별 꿈 해석과 행운의 숫자를 알려드립니다.',
   keywords: ['꿈해몽', '꿈 해석', '꿈 풀이', '꿈 사전', '태몽', '길몽', '흉몽'],
   alternates: {
     canonical: 'https://unse.me/dream',
+    languages: { 'ko-KR': 'https://unse.me/dream' },
   },
 };
 

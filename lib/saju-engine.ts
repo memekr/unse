@@ -41,10 +41,10 @@ export type SajuResult = {
   yearly: string;
 };
 
-// ── 기준 일진: 2000년 1월 1일 = 경진일(庚辰日) - 간지 번호 16 ──
+// ── 기준 일진: 2000년 1월 1일 = 무오일(戊午日) - JDN 검증 완료 ──
 const BASE_DATE = new Date(2000, 0, 1);
-const BASE_DAY_STEM = 6;   // 庚 = 6
-const BASE_DAY_BRANCH = 4; // 辰 = 4
+const BASE_DAY_STEM = 4;   // 戊 = 4
+const BASE_DAY_BRANCH = 6; // 午 = 6
 
 // ── Pillar 생성 ──
 function makePillar(stem: number, branch: number): Pillar {
