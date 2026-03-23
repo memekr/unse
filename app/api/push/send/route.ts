@@ -14,15 +14,11 @@ import { sendToAll, getSubscriptionCount } from '@/lib/push';
  */
 export async function POST(request: Request) {
   try {
-    // 간단한 인증 (크론 시크릿)
-    const cronSecret = process.env.CRON_SECRET;
-    if (cronSecret) {
-      const authHeader = request.headers.get('authorization');
-      const cronHeader = request.headers.get('x-cron-secret');
-      const token = authHeader?.replace('Bearer ', '') || cronHeader;
-      if (token !== cronSecret) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-      }
+    // 인증 필수 (크론 시크릿 또는 VAPID key)
+    const authHeader = request.headers.get('authorization') || request.headers.get('x-cron-secret');
+    const secret = process.env.CRON_SECRET || process.env.VAPID_PRIVATE_KEY;
+    if (!secret || authHeader !== `Bearer ${secret}`) {
+      return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
     }
 
     const body = await request.json().catch(() => ({}));

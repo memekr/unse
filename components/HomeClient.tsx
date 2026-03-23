@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useAuth } from '@/components/AuthContext';
 import { calculateSaju, FIVE_ELEMENTS_NAME, FIVE_ELEMENTS_COLOR } from '@/lib/saju-engine';
 import type { SajuResult } from '@/lib/saju-engine';
-import { ZODIAC_SIGNS, getDailySeed, HEAVENLY_STEMS, EARTHLY_BRANCHES } from '@/lib/fortune-data';
+import { ZODIAC_SIGNS, getDailySeed, seededRandom, HEAVENLY_STEMS, EARTHLY_BRANCHES, FORTUNE_MESSAGES } from '@/lib/fortune-data';
 import {
   getZodiacSign, getZodiacFortune, hashName, getDailyTarot,
   getLuckyNumbers, BIRTH_TIMES, getHoroscopeSummary, getSajuSummary,
@@ -18,6 +18,8 @@ import { analyzeAdvancedSaju, type AdvancedSajuResult } from '@/lib/saju-advance
 import ProductAdBanner from '@/components/ads/ProductAdBanner';
 import AppDownloadSection from '@/components/AppDownloadSection';
 import PushSubscribe from '@/components/PushSubscribe';
+import { generateResultCard, shareResultCard, downloadResultCard } from '@/lib/result-card-generator';
+import type { ResultCardData } from '@/lib/result-card-generator';
 
 function stars(n: number) {
   return '\u2B50'.repeat(n) + '\u2606'.repeat(5 - n);
@@ -54,6 +56,15 @@ type FullResult = {
 
 type ViewMode = 'input' | 'select' | 'horoscope' | 'saju' | 'tarot' | 'lucky';
 
+type HistoryEntry = {
+  name: string;
+  date: string;
+  score: number;
+  zodiacName: string;
+  zodiacIcon: string;
+  dominantElement: string;
+};
+
 /* ── 메인 컴포넌트 ── */
 
 export default function HomeClient() {
@@ -66,6 +77,12 @@ export default function HomeClient() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<FullResult | null>(null);
   const [view, setView] = useState<ViewMode>('input');
+  const [sharing, setSharing] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const [history, setHistory] = useState<HistoryEntry[]>(() => {
+    if (typeof window === 'undefined') return [];
+    try { return JSON.parse(localStorage.getItem('unse_history') ?? '[]'); } catch { return []; }
+  });
 
   // 저장된 프로필
   const [saved] = useState<Array<{ name: string; birthDate: string; gender: string; birthTime: number }>>(() => {
@@ -109,6 +126,25 @@ export default function HomeClient() {
         const list = [p, ...saved.filter(s => s.name !== p.name)].slice(0, 5);
         localStorage.setItem('unse_profiles', JSON.stringify(list));
       } catch { /* */ }
+
+      // 히스토리 저장
+      try {
+        const overallScoreVal = getOverallScore(fortune);
+        const entry: HistoryEntry = {
+          name: name.trim(),
+          date: new Date().toISOString().slice(0, 10),
+          score: overallScoreVal,
+          zodiacName: zodiac.name,
+          zodiacIcon: zodiac.icon,
+          dominantElement: FIVE_ELEMENTS_NAME[saju.dominantElement],
+        };
+        const prevHistory: HistoryEntry[] = JSON.parse(localStorage.getItem('unse_history') ?? '[]');
+        // 같은 날 같은 이름이면 교체
+        const filtered = prevHistory.filter(h => !(h.name === entry.name && h.date === entry.date));
+        const newHistory = [entry, ...filtered].slice(0, 30);
+        localStorage.setItem('unse_history', JSON.stringify(newHistory));
+        setHistory(newHistory);
+      } catch { /* */ }
     }, 300);
   }
 
@@ -138,6 +174,39 @@ export default function HomeClient() {
         </section>
 
         <PushSubscribe />
+
+        {/* 오늘의 한줄 운세 (입력 없이) */}
+        {(() => {
+          const seed = getDailySeed();
+          const rng = seededRandom(seed * 31);
+          const fortuneIdx = Math.floor(rng() * FORTUNE_MESSAGES.length);
+          const dailyFortune = FORTUNE_MESSAGES[fortuneIdx];
+          const luckyNum = Math.floor(rng() * 45) + 1;
+          const colors = ['빨강', '주황', '노랑', '초록', '파랑', '보라', '핑크', '골드', '실버', '하늘'];
+          const luckyColor = colors[Math.floor(rng() * colors.length)];
+          return (
+            <section style={{
+              margin: '1.25rem 0', padding: '1.25rem', borderRadius: 'var(--radius-lg)',
+              background: 'linear-gradient(135deg, rgba(139,92,246,0.12), rgba(99,102,241,0.08))',
+              border: '1px solid var(--color-glass-border)', textAlign: 'center',
+            }}>
+              <div style={{ fontSize: '0.6875rem', color: 'var(--color-text-dim)', marginBottom: '0.375rem', letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 600 }}>
+                {dateStr}{' \u00B7 '}{'오늘의 한줄 운세'}
+              </div>
+              <p style={{ fontSize: '1rem', color: 'var(--color-text)', fontWeight: 600, lineHeight: 1.7, margin: '0.5rem 0' }}>
+                {'\u2728 '}{dailyFortune}
+              </p>
+              <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', marginTop: '0.75rem' }}>
+                <span style={{ padding: '0.25rem 0.625rem', borderRadius: '9999px', background: 'var(--color-gold-soft)', color: 'var(--color-gold)', fontSize: '0.75rem', fontWeight: 600 }}>
+                  {'Lucky Color: '}{luckyColor}
+                </span>
+                <span style={{ padding: '0.25rem 0.625rem', borderRadius: '9999px', background: 'rgba(139,92,246,0.15)', color: 'var(--color-accent)', fontSize: '0.75rem', fontWeight: 600 }}>
+                  {'Lucky Number: '}{luckyNum}
+                </span>
+              </div>
+            </section>
+          );
+        })()}
 
         {/* Google 로그인 상태는 헤더의 AuthButton으로 이동됨 */}
 
@@ -208,6 +277,76 @@ export default function HomeClient() {
 
           {/* 구글 로그인은 헤더로 이동 */}
         </form>
+
+        {/* 이전 결과 히스토리 */}
+        {history.length > 0 && (
+          <section style={{ marginTop: '1.5rem' }}>
+            <button
+              type="button"
+              onClick={() => setShowHistory(!showHistory)}
+              style={{
+                width: '100%', padding: '0.75rem 1rem', borderRadius: 'var(--radius-sm)',
+                border: '1px solid var(--color-glass-border)', background: 'var(--color-glass)',
+                color: 'var(--color-text-muted)', fontSize: '0.875rem', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+              }}
+            >
+              {'\uD83D\uDCCB'}{' 이전 결과 ('}{history.length}{'건)'}
+              <span style={{ fontSize: '0.75rem', transition: 'transform 0.2s', display: 'inline-block', transform: showHistory ? 'rotate(180deg)' : 'none' }}>{'\u25BC'}</span>
+            </button>
+            {showHistory && (
+              <div style={{ marginTop: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                {history.map((h, i) => (
+                  <div key={`${h.name}-${h.date}-${i}`} style={{
+                    padding: '0.75rem 1rem', borderRadius: 'var(--radius-sm)',
+                    background: 'var(--color-bg-card)', border: '1px solid var(--color-glass-border)',
+                    display: 'flex', alignItems: 'center', gap: '0.75rem',
+                  }}>
+                    <span style={{ fontSize: '1.5rem' }}>{h.zodiacIcon}</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--color-text)' }}>
+                        {h.name}
+                      </div>
+                      <div style={{ fontSize: '0.6875rem', color: 'var(--color-text-dim)' }}>
+                        {h.date}{' \u00B7 '}{h.zodiacName}{' \u00B7 '}{h.dominantElement}
+                      </div>
+                    </div>
+                    <div style={{
+                      display: 'flex', flexDirection: 'column', alignItems: 'center',
+                      padding: '0.25rem 0.625rem', borderRadius: 'var(--radius-sm)',
+                      background: h.score >= 80 ? 'rgba(52,211,153,0.15)' : h.score >= 60 ? 'rgba(139,92,246,0.15)' : 'rgba(251,191,36,0.15)',
+                    }}>
+                      <span style={{
+                        fontSize: '1rem', fontWeight: 800,
+                        color: h.score >= 80 ? '#34d399' : h.score >= 60 ? 'var(--color-accent)' : '#fbbf24',
+                      }}>{h.score}</span>
+                      <span style={{ fontSize: '0.5rem', color: 'var(--color-text-dim)' }}>{'점'}</span>
+                    </div>
+                  </div>
+                ))}
+                {history.length > 5 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (confirm('이전 결과를 모두 삭제하시겠어요?')) {
+                        localStorage.removeItem('unse_history');
+                        setHistory([]);
+                        setShowHistory(false);
+                      }
+                    }}
+                    style={{
+                      padding: '0.5rem', borderRadius: 'var(--radius-sm)',
+                      border: '1px solid rgba(248,113,113,0.2)', background: 'rgba(248,113,113,0.05)',
+                      color: '#f87171', fontSize: '0.75rem', cursor: 'pointer', textAlign: 'center',
+                    }}
+                  >
+                    {'기록 전체 삭제'}
+                  </button>
+                )}
+              </div>
+            )}
+          </section>
+        )}
 
         {/* 앱 다운로드 CTA */}
         <AppDownloadSection />
@@ -321,6 +460,54 @@ export default function HomeClient() {
           </div>
         </section>
 
+        {/* 사주 오행 비주얼 차트 */}
+        <section style={{
+          padding: '1.25rem', borderRadius: 'var(--radius-lg)',
+          background: 'var(--color-bg-card)', border: '1px solid var(--color-glass-border)',
+          marginBottom: '1.5rem',
+        }}>
+          <div style={{ fontSize: '0.8125rem', fontWeight: 700, marginBottom: '0.875rem', textAlign: 'center', color: 'var(--color-text)' }}>
+            {'오행(五行) 균형'}
+          </div>
+          <div style={{ display: 'flex', gap: '0.625rem', justifyContent: 'center', alignItems: 'flex-end', height: '7rem' }}>
+            {r.saju.fiveElementPercents.map((pct, idx) => {
+              const ELEMENT_HANJA = ['\u6728', '\u706B', '\u571F', '\u91D1', '\u6C34'];
+              const ELEMENT_KO_LABELS = ['\uBAA9', '\uD654', '\uD1A0', '\uAE08', '\uC218'];
+              const barHeight = Math.max(pct, 8);
+              const isDominant = idx === r.saju.dominantElement;
+              const isWeak = idx === r.saju.weakElement;
+              return (
+                <div key={idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.25rem', flex: 1, maxWidth: '4rem' }}>
+                  <span style={{ fontSize: '0.6875rem', fontWeight: 700, color: FIVE_ELEMENTS_COLOR[idx] }}>{pct}{'%'}</span>
+                  <div style={{ width: '100%', height: '4.5rem', background: 'rgba(255,255,255,0.04)', borderRadius: '0.5rem', overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', position: 'relative' }}>
+                    <div style={{
+                      height: `${barHeight}%`, background: `linear-gradient(to top, ${FIVE_ELEMENTS_COLOR[idx]}, ${FIVE_ELEMENTS_COLOR[idx]}88)`,
+                      borderRadius: '0.5rem 0.5rem 0 0', transition: 'height 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
+                      boxShadow: isDominant ? `0 0 12px ${FIVE_ELEMENTS_COLOR[idx]}40` : 'none',
+                    }} />
+                  </div>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '1rem', fontWeight: 800, color: FIVE_ELEMENTS_COLOR[idx] }}>{ELEMENT_HANJA[idx]}</div>
+                    <div style={{ fontSize: '0.625rem', color: isDominant ? FIVE_ELEMENTS_COLOR[idx] : isWeak ? 'var(--color-danger)' : 'var(--color-text-dim)', fontWeight: isDominant || isWeak ? 700 : 400 }}>
+                      {ELEMENT_KO_LABELS[idx]}
+                      {isDominant && ' \u25B2'}
+                      {isWeak && ' \u25BC'}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', marginTop: '0.75rem', fontSize: '0.6875rem' }}>
+            <span style={{ color: FIVE_ELEMENTS_COLOR[r.saju.dominantElement] }}>
+              {'\u25B2 '}{FIVE_ELEMENTS_NAME[r.saju.dominantElement]}{' \u2014 강한 기운'}
+            </span>
+            <span style={{ color: 'var(--color-danger)' }}>
+              {'\u25BC '}{FIVE_ELEMENTS_NAME[r.saju.weakElement]}{' \u2014 보충 필요'}
+            </span>
+          </div>
+        </section>
+
         {/* 서비스 선택 카드 */}
         <h2 style={{ fontSize: '1.125rem', fontWeight: 700, textAlign: 'center', marginBottom: '1rem', color: 'var(--color-text-muted)' }}>
           {'어떤 운세를 확인하시겠어요?'}
@@ -398,6 +585,45 @@ export default function HomeClient() {
                 </span>
               ))}
             </div>
+          </button>
+        </div>
+
+        {/* 결과 공유 카드 */}
+        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '1.25rem' }}>
+          <button
+            onClick={async () => {
+              setSharing(true);
+              try {
+                const cardData: ResultCardData = {
+                  name: r.name,
+                  score: overallScore,
+                  fortune: horoscopeSummary,
+                  zodiac: r.zodiac.name,
+                  zodiacIcon: r.zodiac.icon,
+                  luckyNumbers: r.luckyNumbers,
+                  dominantElement: FIVE_ELEMENTS_NAME[r.saju.dominantElement] + ' 기운',
+                  elementColor: FIVE_ELEMENTS_COLOR[r.saju.dominantElement],
+                  advice: r.fortune.advice,
+                };
+                const blob = await generateResultCard(cardData);
+                await shareResultCard(blob, r.name);
+              } catch (e) { console.error('[share-card]', e); }
+              setSharing(false);
+            }}
+            disabled={sharing}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
+              padding: '0.75rem 1.5rem', borderRadius: '9999px',
+              background: 'linear-gradient(135deg, rgba(168,85,247,0.2), rgba(139,92,246,0.2))',
+              border: '1px solid rgba(168,85,247,0.3)',
+              color: '#c084fc', fontSize: '0.875rem', fontWeight: 600,
+              cursor: sharing ? 'wait' : 'pointer',
+              opacity: sharing ? 0.6 : 1,
+              transition: 'all 0.2s',
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z" /></svg>
+            {sharing ? '카드 생성 중...' : '결과 카드 공유'}
           </button>
         </div>
 

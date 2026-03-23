@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import HomeClient from '@/components/HomeClient';
 import { ShareButtons } from '@/components/ShareButtons';
+import { ContextualPromo } from '@/components/ContextualPromo';
 
 export const metadata: Metadata = {
   title: '무료 운세 - 사주풀이 · 타로 · 꿈해몽 · 별자리 운세 | 운세미',
@@ -37,6 +38,7 @@ export default function HomePage() {
           운세미 꿈해몽에서 꿈에 등장한 키워드를 검색하면 해당 꿈의 의미와 길흉을 상세하게 알려드립니다. 수천 가지 꿈 해석 데이터베이스를 보유하고 있습니다.
         </p>
         <ShareButtons title="운세미 - 무료 운세 사주풀이 타로 꿈해몽" />
+        <ContextualPromo content="운세 사주 타로 별자리 꿈해몽" currentSite="unse.me" />
       </section>
     </>
   );

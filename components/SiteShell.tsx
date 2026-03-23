@@ -7,6 +7,9 @@ import { siteConfig } from '@/lib/site-config';
 import AuthButton from './AuthButton';
 import { CrossSiteFooter } from './CrossSiteFooter';
 
+import RecentActivity, { RecentActivityTracker } from './shared/RecentActivity';
+import { BookmarkList } from './shared/BookmarkButton';
+
 type SiteShellProps = {
   children: ReactNode;
   /** 상단 배너 텍스트 (선택) */
@@ -36,6 +39,9 @@ export default function SiteShell({ children, topBanner }: SiteShellProps) {
   return (
     <div className="site-shell">
       {/* 상단 배너 제거됨 */}
+
+      {/* Recent activity tracker (invisible) */}
+      <RecentActivityTracker />
 
       {/* 헤더 */}
       <header className="site-header" role="banner">
@@ -83,6 +89,9 @@ export default function SiteShell({ children, topBanner }: SiteShellProps) {
               {'소개'}
             </Link>
             <AuthButton />
+            <div className="header-nav-divider" role="separator" aria-hidden="true" />
+            <RecentActivity />
+            <BookmarkList />
           </nav>
         </div>
       </header>

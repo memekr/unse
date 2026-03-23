@@ -3,10 +3,14 @@ import { Noto_Sans_KR } from 'next/font/google';
 import { siteConfig } from '@/lib/site-config';
 import SiteShell from '@/components/SiteShell';
 import GoogleAnalytics from '@/components/GoogleAnalytics';
+import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import { AuthProvider } from '@/components/AuthContext';
 import './globals.css';
 import AppSmartBanner from '@/components/AppSmartBanner';
 import { PwaInstallBanner } from '@/components/PwaInstallBanner';
+import OnboardingTooltip from '@/components/shared/OnboardingTooltip';
+import FeedbackWidget from '@/components/shared/FeedbackWidget';
 
 const notoSansKr = Noto_Sans_KR({
   subsets: ['latin'],
@@ -258,7 +262,7 @@ export default function RootLayout({
   };
 
   return (
-    <html lang="ko" className={notoSansKr.className}>
+    <html lang="ko" data-theme="dark" className={notoSansKr.className}>
       <head>
         <link
           rel="stylesheet"
@@ -298,8 +302,19 @@ export default function RootLayout({
         <p style={{ fontSize: '11px', color: '#9ca3af', opacity: 0.7, textAlign: 'center', padding: '8px 16px' }}>
           본 사이트의 일부 링크는 제휴 마케팅 링크로, 이를 통한 구매 시 사이트 운영에 도움이 되는 소정의 수수료를 받을 수 있습니다.
         </p>
+        <OnboardingTooltip
+          siteName="운세미"
+          features={[
+            '오늘의 운세, 띠별 운세, 별자리 운세를 매일 무료로 확인',
+            'AI 사주풀이, 타로, 궁합 보기 완전 무료',
+            '꿈해몽 검색 — 179개 꿈 DB에서 즉시 해석',
+          ]}
+        />
+        <FeedbackWidget siteName="운세미" />
         </AuthProvider>
         <PwaInstallBanner />
+        <Analytics />
+        <SpeedInsights />
         <script
           dangerouslySetInnerHTML={{
             __html: `

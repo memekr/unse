@@ -79,7 +79,7 @@ export default async function DreamDetailPage({
   const dream = getDream(slug);
   if (!dream) notFound();
 
-  const relatedDreams = dream.relatedDreams
+  const relatedDreams = (dream.relatedDreams ?? [])
     .map((rs) => dreamsData.find((d) => d.slug === rs))
     .filter(Boolean) as Dream[];
 

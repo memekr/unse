@@ -32,7 +32,7 @@ export default function PushSubscribe() {
       return;
     }
 
-    // 이미 구독 중인지 확인
+    // 이미 알림 ON인지 확인
     navigator.serviceWorker.ready.then((reg) => {
       reg.pushManager.getSubscription().then((sub) => {
         if (sub) setState('subscribed');
@@ -75,13 +75,13 @@ export default function PushSubscribe() {
         }),
       });
 
-      if (!res.ok) throw new Error('구독 저장 실패');
+      if (!res.ok) throw new Error('알림 설정 저장 실패');
 
       setState('subscribed');
       localStorage.setItem('unse_push_subscribed', '1');
     } catch (err) {
       console.error('Push subscribe error:', err);
-      setError('구독 중 오류가 발생했습니다');
+      setError('알림 설정 중 오류가 발생했습니다');
       setState('idle');
     }
   }, []);
@@ -109,7 +109,7 @@ export default function PushSubscribe() {
       localStorage.removeItem('unse_push_subscribed');
     } catch (err) {
       console.error('Push unsubscribe error:', err);
-      setError('구독 해제 중 오류가 발생했습니다');
+      setError('알림 끄기 중 오류가 발생했습니다');
       setState('subscribed');
     }
   }, []);
@@ -131,14 +131,14 @@ export default function PushSubscribe() {
         <div className="push-subscribe-inner push-subscribe-active">
           <span className="push-icon" aria-hidden="true">🔔</span>
           <div className="push-text">
-            <p className="push-title">매일 아침 운세 알림 받는 중</p>
+            <p className="push-title">알림 ON - 매일 아침 운세 알림 받는 중</p>
             <p className="push-desc">매일 오전 7시에 오늘의 운세를 알려드려요</p>
           </div>
           <button
             className="push-btn push-btn-unsub"
             onClick={unsubscribe}
           >
-            해제
+            알림 끄기
           </button>
         </div>
       ) : (
@@ -153,7 +153,7 @@ export default function PushSubscribe() {
             onClick={subscribe}
             disabled={state === 'loading'}
           >
-            {state === 'loading' ? '구독 중...' : '구독'}
+            {state === 'loading' ? '설정 중...' : '알림 설정'}
           </button>
         </div>
       )}
